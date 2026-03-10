@@ -1,0 +1,13 @@
+Options -Indexes
+
+# Activer mod_rewrite
+RewriteEngine On
+
+# Autoriser les headers CORS pour les preflight OPTIONS
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Répondre 204 aux requêtes OPTIONS (preflight)
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^ - [R=204,L]
