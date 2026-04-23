@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Locataire } from '../types/models';
-import { authService } from '../services/authService';
+import { authService, getCachedUser, saveUserCache } from '../services/authService';
 import { apiFetch } from '../services/apiClient';
 
 interface AuthContextType {
@@ -40,7 +40,7 @@ function useAuthProvider(): AuthContextType {
   const [user, setUser] = useState<Locataire | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Vérification du token JWT stocké dans SecureStore au démarrage
+  // Vérification du token JWT stocké au démarrage
   useEffect(() => {
     (async () => {
       const token = await authService.getStoredToken();
@@ -48,8 +48,22 @@ function useAuthProvider(): AuthContextType {
         try {
           const me = await apiFetch<Locataire>('/auth/me');
           setUser(me);
-        } catch {
-          await authService.logout();
+          await saveUserCache(me); // Rafraîchit le cache local
+        } catch (err: any) {
+          const msg: string = err?.message ?? '';
+          if (
+            msg.includes('Session expirée') ||
+            msg.includes('401') ||
+            msg.includes('invalide')
+          ) {
+            // Vrai problème d'auth → on déconnecte
+            await authService.logout();
+          } else {
+            // Erreur réseau ou serveur temporairement down
+            // → on garde le token et on utilise le cache local
+            const cached = await getCachedUser();
+            setUser(cached);
+          }
         }
       }
       setIsLoading(false);

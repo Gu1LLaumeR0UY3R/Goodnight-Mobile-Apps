@@ -1,5 +1,22 @@
-// src/types/models.ts
-// Issue #11 — Interfaces TypeScript correspondant exactement aux tables de la BDD "goodnight"
+/**
+ * src/types/models.ts
+ *
+ * RÔLE :
+ *   Interfaces TypeScript qui reflètent exactement la structure des tables MySQL.
+ *   Utilisées dans tous les écrans, services et composants pour garantir
+ *   la cohérence des données entre le frontend et l'API.
+ *
+ * RÈGLE : Ces interfaces doivent toujours correspondre à ce que retourne
+ *   l'API PHP. Si un champ est ajouté en BDD, il faut l'ajouter ici.
+ *
+ * INTERFACES PRINCIPALES :
+ *   Locataire   → table `locataire`  (utilisateur connecté)
+ *   Bien        → table `biens`      (annonce, avec champs joints)
+ *   Photo       → table `photos`     (photos d'un bien)
+ *   Commune     → table `commune`    (commune INSEE)
+ *   Blocage     → table `blocages`   (indisponibilité d'un bien)
+ *   Notification → table `notifications`
+ */
 
 export interface Locataire {
   id_locataire: number;
@@ -30,15 +47,24 @@ export interface Bien {
   id_TypeBien: number;
   id_commune: number;
   id_locataire: number | null;
+  // Statut de validation de l'annonce par l'administrateur
+  // 'en_attente' = soumis mais pas encore examiné
+  // 'valide'     = approuvé, visible dans le listing public
+  // 'refuse'     = rejeté (voir motif_refus pour la raison)
   statut_validation: 'en_attente' | 'valide' | 'refuse';
-  // Champs joints
+  // Raison du refus, remplie par l'admin uniquement si statut = 'refuse'
+  motif_refus?: string | null;
+  // Champs joints (JOIN SQL dans l'API) — pas toujours présents selon l'endpoint
   ville_nom?: string;
   ville_code_postal?: string;
   desc_type_bien?: string;
+  prix_semaine_min?: number;
   prix_nuit?: number;
   note_moyenne?: number;
   nb_avis?: number;
   photo_principale?: string;
+  ville_latitude_deg?: number;
+  ville_longitude_deg?: number;
 }
 
 export interface Commune {
@@ -48,6 +74,26 @@ export interface Commune {
   ville_departement: string;
   ville_code_postal: string;
   ville_slug: string;
+}
+
+export interface CommuneOption {
+  id_commune: number;
+  ville_nom: string;
+  ville_code_postal: string;
+}
+
+export interface Blocage {
+  id_blocage: number;
+  id_biens: number;
+  date_debut: string;
+  date_fin: string;
+  motif: string;
+}
+
+export interface Photo {
+  id_photo: number;
+  lien_photo: string;
+  is_principal: boolean;
 }
 
 export interface Favori {
@@ -85,6 +131,8 @@ export interface Reservation {
   ville_nom?: string;
   photo_principale?: string;
   prix_semaine?: number;
+  montant_total?: number;
+  nb_nuits?: number;
 }
 
 export interface Notification {

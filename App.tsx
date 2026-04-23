@@ -1,38 +1,16 @@
-import { useState } from 'react';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { LoginScreen } from './src/screens/LoginScreen';
+import { AuthProvider } from './src/hooks/useAuth';
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  if (!isLoggedIn) {
-    return (
-      <>
-        <StatusBar style="light" />
-        <LoginScreen onLoginSuccess={() => setIsLoggedIn(true)} />
-      </>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <Text style={styles.text}>✅ Connecté à la BDD avec succès !</Text>
-    </View>
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <AppNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    color: '#4ade80',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-});
