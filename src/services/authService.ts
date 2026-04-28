@@ -54,7 +54,11 @@ export const authService = {
     prenom_locataire: string,
     email: string,
     tel_locataire: string | null,
-    password: string
+    password: string,
+    dateNaissance_locataire: string | null,
+    type_compte: 'locataire' | 'proprietaire',
+    is_entreprise: boolean,
+    siret: string | null
   ): Promise<AuthResponse> {
     const data = await apiFetch<AuthResponse>('/auth/register', 'POST', {
       nom: nom_locataire,
@@ -62,6 +66,10 @@ export const authService = {
       email,
       telephone: tel_locataire,
       mot_de_passe: password,
+      dateNaissance_locataire,
+      type_compte,
+      is_entreprise,
+      Siret: siret,
     });
     await saveToken(data.token);
     await saveUserCache(data.user);

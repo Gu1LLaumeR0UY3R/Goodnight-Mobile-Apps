@@ -29,6 +29,8 @@ export interface Locataire {
   complement_locataire: string | null;
   RaisonSociale: string | null;
   Siret: string | null;
+  type_compte: 'locataire' | 'proprietaire';
+  is_entreprise: boolean;
   id_commune: number | null;
   pfp_loca: string | null;
   id_cadre_actif: number | null;

@@ -13,7 +13,7 @@ interface CreateCommentaire {
 
 export const commentairesService = {
   async getByBien(id_biens: number): Promise<Commentaire[]> {
-    return apiFetch<Commentaire[]>(`/biens/${id_biens}/commentaires`);
+    return apiFetch<Commentaire[]>(`/commentaires/${id_biens}`);
   },
 
   async create(data: CreateCommentaire): Promise<Commentaire> {

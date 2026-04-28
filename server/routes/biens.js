@@ -17,6 +17,7 @@ function buildFilters(query) {
   const {
     search,
     ville,
+    villes,
     type,
     types,
     prix_min,
@@ -41,9 +42,17 @@ function buildFilters(query) {
     whereParams.push(`%${search}%`, `%${search}%`);
   }
 
-  if (ville) {
+  // Support both single ville (legacy) and villes (comma-separated list)
+  const villeList = villes
+    ? String(villes).split(',').map(v => v.trim()).filter(Boolean)
+    : ville ? [String(ville).trim()] : [];
+  if (villeList.length === 1) {
     whereClauses.push('c.ville_nom LIKE ?');
-    whereParams.push(`%${ville}%`);
+    whereParams.push(`%${villeList[0]}%`);
+  } else if (villeList.length > 1) {
+    const placeholders = villeList.map(() => 'c.ville_nom LIKE ?').join(' OR ');
+    whereClauses.push(`(${placeholders})`);
+    villeList.forEach(v => whereParams.push(`%${v}%`));
   }
 
   if (type) {
@@ -183,6 +192,27 @@ router.get('/', async (req, res) => {
 
   } catch (err) {
     console.error('[biens]', err);
+    res.status(500).json({ success: false, error: 'Erreur base de données' });
+  }
+});
+
+// ─── GET /api/biens/villes ──────────────────────────────────────────────────
+router.get('/villes', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 1) return res.json({ success: true, data: [] });
+    const [rows] = await pool.execute(
+      `SELECT DISTINCT c.ville_nom
+       FROM commune c
+       INNER JOIN biens b ON b.id_commune = c.id_commune
+       WHERE c.ville_nom LIKE ? AND b.statut_validation = 'valide'
+       ORDER BY c.ville_nom
+       LIMIT 10`,
+      [`${q}%`]
+    );
+    res.json({ success: true, data: rows.map(r => r.ville_nom) });
+  } catch (err) {
+    console.error('[biens villes]', err);
     res.status(500).json({ success: false, error: 'Erreur base de données' });
   }
 });

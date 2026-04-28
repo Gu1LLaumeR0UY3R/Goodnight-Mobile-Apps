@@ -45,10 +45,6 @@ appelle authService.register() DIRECTEMENT
 ❌ Utilisateur obligé de recharger l'app
 ```
 
-**Impact Utilisateur**:
-- 🔴 Expérience frustante (création de compte échoue visiblement)
-- 🔴 Confiance réduite (l'app semble "buguée")
-- 🔴 Friction augmentée (rechargement nécessaire)
 
 ### ✅ Solution (FIX)
 
@@ -73,11 +69,6 @@ appelle useAuth().register() via contexte
      ↓
 ✅ Session persiste même après fermeture de l'app (JWT stocké)
 ```
-
-**Impact Utilisateur**:
-- 🟢 Expérience fluide (signup → login → home en 3 secondes)
-- 🟢 Cohérence (même pattern que Login)
-- 🟢 Zéro friction post-inscription
 
 ### 📊 Comportement Avant/Après
 

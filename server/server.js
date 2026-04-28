@@ -6,8 +6,11 @@ const express = require('express');
 const cors    = require('cors');
 const pool    = require('./config/database');
 
-const authRoutes  = require('./routes/auth');
-const biensRoutes = require('./routes/biens');
+const authRoutes         = require('./routes/auth');
+const biensRoutes        = require('./routes/biens');
+const commentairesRoutes = require('./routes/commentaires');
+const favorisRoutes      = require('./routes/favoris');
+const reservationsRoutes = require('./routes/reservations');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -17,8 +20,11 @@ app.use(cors());
 app.use(express.json());
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',  authRoutes);
-app.use('/api/biens', biensRoutes);
+app.use('/api/auth',         authRoutes);
+app.use('/api/biens',        biensRoutes);
+app.use('/api/commentaires', commentairesRoutes);
+app.use('/api/favoris',      favorisRoutes);
+app.use('/api/reservations', reservationsRoutes);
 
 // ── Route de test (ping BDD) ─────────────────────────────────────────────────
 app.get('/api/ping', async (_req, res) => {

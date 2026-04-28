@@ -22,7 +22,11 @@ interface AuthContextType {
     prenom_locataire: string,
     email: string,
     tel_locataire: string | null,
-    password: string
+    password: string,
+    dateNaissance_locataire: string | null,
+    type_compte: 'locataire' | 'proprietaire',
+    is_entreprise: boolean,
+    siret: string | null
   ) => Promise<void>;
   loginWithGoogle: (googleToken: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -80,9 +84,23 @@ function useAuthProvider(): AuthContextType {
     prenom_locataire: string,
     email: string,
     tel_locataire: string | null,
-    password: string
+    password: string,
+    dateNaissance_locataire: string | null,
+    type_compte: 'locataire' | 'proprietaire',
+    is_entreprise: boolean,
+    siret: string | null
   ) {
-    const { user: u } = await authService.register(nom_locataire, prenom_locataire, email, tel_locataire, password);
+    const { user: u } = await authService.register(
+      nom_locataire,
+      prenom_locataire,
+      email,
+      tel_locataire,
+      password,
+      dateNaissance_locataire,
+      type_compte,
+      is_entreprise,
+      siret
+    );
     setUser(u);
   }
 

@@ -3,7 +3,7 @@
 // Usage : <ErrorToast message={error} onDismiss={() => setError(null)} />
 
 import { useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ErrorToastProps {
   message: string | null;
@@ -44,11 +44,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     zIndex: 9999,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 8,
+        }),
   },
   text: {
     color: '#fff',

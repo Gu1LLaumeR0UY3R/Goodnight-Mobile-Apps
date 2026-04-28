@@ -6,7 +6,15 @@ require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/helpers.php';
 
 function requireAuth(): array {
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION']
+        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+        ?? '';
+
+    if ($authHeader === '' && function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    }
+
     if (!str_starts_with($authHeader, 'Bearer ')) {
         jsonError('Token manquant', 401);
     }

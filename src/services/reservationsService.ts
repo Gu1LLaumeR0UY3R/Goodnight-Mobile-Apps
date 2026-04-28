@@ -1,15 +1,9 @@
 // src/services/reservationsService.ts
-// Issue #14 — Service des réservations
+// Issue #14 / #16 — Service des réservations
 
 import { apiFetch } from './apiClient';
 import type { Reservation } from '../types/models';
-
-interface CreateReservation {
-  id_biens: number;
-  date_debut: string;
-  date_fin: string;
-  montant_total: number;
-}
+import type { DisponibilitePlage, TarifCalcule, ReservationCreated, ReservationPayload } from '../types/reservation';
 
 export const reservationsService = {
   async getAll(): Promise<Reservation[]> {
@@ -20,11 +14,19 @@ export const reservationsService = {
     return apiFetch<Reservation>(`/reservations/${id}`);
   },
 
-  async create(data: CreateReservation): Promise<Reservation> {
-    return apiFetch<Reservation>('/reservations', 'POST', data);
+  async create(data: ReservationPayload): Promise<ReservationCreated> {
+    return apiFetch<ReservationCreated>('/reservations', 'POST', data);
   },
 
-  async getDisponibilites(id_biens: number): Promise<string[]> {
-    return apiFetch<string[]>(`/biens/${id_biens}/disponibilites`);
+  async cancel(id: number): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(`/reservations/${id}`, 'DELETE');
+  },
+
+  async getDisponibilites(id_biens: number): Promise<DisponibilitePlage[]> {
+    return apiFetch<DisponibilitePlage[]>(`/biens/${id_biens}/disponibilites`);
+  },
+
+  async getTarif(id_biens: number, debut: string, fin: string): Promise<TarifCalcule> {
+    return apiFetch<TarifCalcule>(`/biens/${id_biens}/tarif?debut=${debut}&fin=${fin}`);
   },
 };

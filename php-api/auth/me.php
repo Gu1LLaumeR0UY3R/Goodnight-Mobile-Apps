@@ -26,7 +26,7 @@ try {
         jsonError('Utilisateur introuvable', 404);
     }
 
-    unset($user['mot_de_passe']);
+    unset($user['password_locataire'], $user['mot_de_passe']);
     jsonSuccess($user);
 
 } catch (PDOException $e) {

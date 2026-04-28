@@ -3,11 +3,15 @@ Options -Indexes
 # Activer mod_rewrite
 RewriteEngine On
 
-# Autoriser les headers CORS pour les preflight OPTIONS
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+# Propager le header Authorization jusqu'a PHP (Apache + mod_rewrite)
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
 
-# Répondre 204 aux requêtes OPTIONS (preflight)
+# Forcer les requêtes OPTIONS (preflight CORS) vers index.php AVANT toute autre règle
 RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^ - [R=204,L]
+RewriteRule .* index.php [L]
+
+# Rediriger toutes les autres requêtes vers index.php (front controller)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

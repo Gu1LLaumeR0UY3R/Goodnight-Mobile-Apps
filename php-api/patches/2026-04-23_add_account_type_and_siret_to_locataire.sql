@@ -1,0 +1,4 @@
+ALTER TABLE locataire
+  ADD COLUMN IF NOT EXISTS type_compte ENUM('locataire', 'proprietaire') NOT NULL DEFAULT 'locataire',
+  ADD COLUMN IF NOT EXISTS is_entreprise BOOLEAN NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS Siret VARCHAR(32) NULL DEFAULT NULL;

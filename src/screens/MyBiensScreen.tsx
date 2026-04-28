@@ -33,6 +33,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useAuth } from '../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { biensService } from '../services/biensService';
@@ -41,6 +42,8 @@ import { StatusBadge } from '../components/StatusBadge';
 import type { Bien } from '../types/models';
 
 export default function MyBiensScreen({ navigation }: any) {
+  const { user } = useAuth();
+  const canPublish = user?.type_compte === 'proprietaire';
   const [biens, setBiens] = useState<Bien[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -166,10 +169,18 @@ export default function MyBiensScreen({ navigation }: any) {
         );
       }}
       ListHeaderComponent={
-        <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddBien')}>
-          <Ionicons name="add-circle-outline" size={18} color="#fff" />
-          <Text style={styles.addBtnText}>Ajouter un bien</Text>
-        </TouchableOpacity>
+        canPublish ? (
+          <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddBien')}>
+            <Ionicons name="add-circle-outline" size={18} color="#fff" />
+            <Text style={styles.addBtnText}>Ajouter un bien</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              Vous êtes inscrit en tant que locataire. Seuls les propriétaires peuvent publier des biens.
+            </Text>
+          </View>
+        )
       }
     />
   );
@@ -306,5 +317,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748b',
     textAlign: 'center',
+  },
+  infoContainer: {
+    marginBottom: 12,
+    backgroundColor: '#eef2ff',
+    borderRadius: 14,
+    padding: 14,
+  },
+  infoText: {
+    color: '#1e293b',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
