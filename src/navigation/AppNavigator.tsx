@@ -49,6 +49,8 @@ import AddBienScreen from '../screens/AddBienScreen';
 import EditBienScreen from '../screens/EditBienScreen';
 import GalerieBienScreen from '../screens/GalerieBienScreen';
 import BienBlocagesScreen from '../screens/BienBlocagesScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import OwnerReservationsScreen from '../screens/OwnerReservationsScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { useAuth } from '../hooks/useAuth';
@@ -117,6 +119,8 @@ function ProfileStack() {
       <Stack.Screen name="BienBlocages" component={BienBlocagesScreen} options={{ title: 'Blocages' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="Map" component={MapScreen} options={{ title: 'Carte' }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Modifier mon profil' }} />
+      <Stack.Screen name="OwnerReservations" component={OwnerReservationsScreen} options={{ title: 'Réservations reçues' }} />
     </Stack.Navigator>
   );
 }
