@@ -110,12 +110,17 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       Notifications.requestPermissionsAsync().catch(() => undefined);
     }
 
-    refreshUnreadCount();
+    // Décaler le premier chargement de 3 s pour ne pas bloquer
+    // les requêtes critiques (biens, types, favoris) au démarrage
+    // sur le serveur PHP mono-thread.
+    const initialDelay = setTimeout(() => {
+      refreshUnreadCount();
+    }, 3000);
     const timer = setInterval(() => {
       refreshUnreadCount();
     }, 25000);
 
-    return () => clearInterval(timer);
+    return () => { clearTimeout(initialDelay); clearInterval(timer); };
   }, [isAuthenticated, refreshUnreadCount]);
 
   const value = useMemo(() => ({

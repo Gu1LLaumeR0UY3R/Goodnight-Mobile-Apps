@@ -10,12 +10,13 @@ import {
 } from 'react';
 import type { Locataire } from '../types/models';
 import { authService, getCachedUser, saveUserCache } from '../services/authService';
-import { apiFetch } from '../services/apiClient';
+import { apiFetch, refreshJwtIfNeeded } from '../services/apiClient';
 
 interface AuthContextType {
   user: Locataire | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  updateUser: (u: Locataire) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (
     nom_locataire: string,
@@ -53,6 +54,7 @@ function useAuthProvider(): AuthContextType {
           const me = await apiFetch<Locataire>('/auth/me');
           setUser(me);
           await saveUserCache(me); // Rafraîchit le cache local
+          refreshJwtIfNeeded().catch(() => {}); // Renouvellement silencieux si token proche de l'expiration
         } catch (err: any) {
           const msg: string = err?.message ?? '';
           if (
@@ -114,10 +116,15 @@ function useAuthProvider(): AuthContextType {
     setUser(null);
   }
 
+  function updateUser(u: Locataire) {
+    setUser(u);
+  }
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    updateUser,
     login,
     register,
     loginWithGoogle,
