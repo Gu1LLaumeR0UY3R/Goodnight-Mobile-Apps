@@ -131,6 +131,7 @@ export interface Reservation {
   date_debut: string;
   date_fin: string;
   id_tarif: number;
+  statut?: 'en_attente' | 'confirmee' | 'refusee' | 'annulee' | null;
   // Champs joints
   designation_bien?: string;
   ville_nom?: string;

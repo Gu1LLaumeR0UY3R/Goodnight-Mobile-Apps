@@ -49,6 +49,8 @@ export interface UpdateBienPayload {
 
 export interface CreateBienPayload extends UpdateBienPayload {
   photo_url?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CreateBlocagePayload {

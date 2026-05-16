@@ -22,6 +22,10 @@ export const reservationsService = {
     return apiFetch<{ message: string }>(`/reservations/${id}`, 'DELETE');
   },
 
+  async updateStatut(id: number, statut: 'confirmee' | 'refusee'): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(`/reservations/${id}`, 'PATCH', { statut });
+  },
+
   async getDisponibilites(id_biens: number): Promise<DisponibilitePlage[]> {
     return apiFetch<DisponibilitePlage[]>(`/biens/${id_biens}/disponibilites`);
   },
