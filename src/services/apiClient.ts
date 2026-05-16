@@ -35,7 +35,6 @@ function resolveServerHost(): string {
   if (configured) return configured.replace(/\/$/, '');
 
   if (Platform.OS === 'web') {
-    // PHP built-in server sur le port 8080
     return 'http://localhost:8080';
   }
 
@@ -44,7 +43,6 @@ function resolveServerHost(): string {
   if (scriptURL) {
     try {
       const host = new URL(scriptURL).hostname;
-      // PHP built-in server sur port 8080
       if (host) return `http://${host}:8080`;
     } catch {
       // fallback ci-dessous
@@ -56,7 +54,6 @@ function resolveServerHost(): string {
 }
 
 const SERVER_HOST = resolveServerHost();
-// PHP built-in server sert les routes directement sans préfixe /api
 const BASE_URL = SERVER_HOST;
 
 /** Résout un chemin de photo relatif ou absolu en URL complète. */
@@ -100,7 +97,7 @@ export async function apiFetch<T>(
   const token = await getToken();
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
+  const timeout = setTimeout(() => controller.abort(), 20_000);
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -153,7 +150,7 @@ export async function apiFetch<T>(
 export async function apiUpload<T>(endpoint: string, formData: FormData): Promise<T> {
   const token = await getToken();
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20_000);
+  const timeout = setTimeout(() => controller.abort(), 40_000);
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -194,5 +191,38 @@ export async function apiUpload<T>(endpoint: string, formData: FormData): Promis
       throw new Error('Vérifiez votre connexion internet');
     }
     throw error;
+  }
+}
+
+// ─── Rafraîchissement proactif du JWT ─────────────────────────────────────────
+
+/** Décode la section payload d'un JWT sans vérification de signature. */
+function parseJwtPayload(token: string): { exp?: number } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = '==='.slice((base64.length + 3) % 4);
+    return JSON.parse(atob(base64 + pad));
+  } catch { return null; }
+}
+
+/**
+ * Si le token JWT expire dans moins de 24 h, demande silencieusement un nouveau
+ * token via POST /auth/refresh et le sauvegarde. À appeler au démarrage de l'app.
+ */
+export async function refreshJwtIfNeeded(): Promise<void> {
+  const token = await getToken();
+  if (!token) return;
+  const payload = parseJwtPayload(token);
+  if (!payload?.exp) return;
+  const remaining = payload.exp - Math.floor(Date.now() / 1000);
+  if (remaining > 86400) return; // Plus d'un jour restant → pas besoin de rafraîchir
+
+  try {
+    const result = await apiFetch<{ token: string }>('/auth/refresh', 'POST');
+    await saveToken(result.token);
+  } catch {
+    // Échec silencieux : le token existant reste valide jusqu'à son expiration naturelle
   }
 }

@@ -137,6 +137,14 @@ export const biensService = {
     return apiFetch<{ message: string }>(`/biens/${id}/photos/${photoId}`, 'PUT');
   },
 
+  async delete(id: number): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>(`/biens/${id}`, 'DELETE');
+  },
+
+  async getReservations(id: number): Promise<import('../types/models').Reservation[]> {
+    return apiFetch<import('../types/models').Reservation[]>(`/biens/${id}/reservations`);
+  },
+
   async getAll(filters: BienFilters = {}): Promise<Bien[]> {
     const params = new URLSearchParams();
     if (filters.search)       params.set('search', filters.search);
