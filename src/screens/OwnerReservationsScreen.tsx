@@ -3,7 +3,9 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -13,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { biensService } from '../services/biensService';
+import { reservationsService } from '../services/reservationsService';
 import type { Reservation } from '../types/models';
 
 interface ReservationWithLocataire extends Reservation {
@@ -31,6 +34,7 @@ export default function OwnerReservationsScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<Set<number>>(new Set());
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -51,6 +55,44 @@ export default function OwnerReservationsScreen({ route, navigation }: any) {
 
   function formatDate(s: string) {
     return new Date(s).toLocaleDateString('fr-FR');
+  }
+
+  function getStatusStyle(statut?: string | null): { bg: string; color: string; label: string } {
+    switch (statut) {
+      case 'confirmee': return { bg: '#dcfce7', color: '#16a34a', label: 'Confirmée' };
+      case 'refusee':   return { bg: '#fee2e2', color: '#ef4444', label: 'Refusée' };
+      case 'annulee':   return { bg: '#f3f4f6', color: '#6b7280', label: 'Annulée' };
+      default:          return { bg: '#fef3c7', color: '#d97706', label: 'En attente' };
+    }
+  }
+
+  async function handleUpdateStatut(item: ReservationWithLocataire, newStatut: 'confirmee' | 'refusee') {
+    const label = newStatut === 'confirmee' ? 'Confirmer' : 'Refuser';
+    const guestName = `${item.prenom_locataire ?? ''} ${item.nom_locataire ?? ''}`.trim() || 'ce locataire';
+    const message = `${label} la réservation de ${guestName} du ${formatDate(item.date_debut)} au ${formatDate(item.date_fin)} ?`;
+
+    const doUpdate = async () => {
+      setUpdating(prev => new Set([...prev, item.id_reservation]));
+      try {
+        await reservationsService.updateStatut(item.id_reservation, newStatut);
+        setReservations(prev =>
+          prev.map(r => r.id_reservation === item.id_reservation ? { ...r, statut: newStatut } : r)
+        );
+      } catch (e: any) {
+        Alert.alert('Erreur', e?.message ?? 'Impossible de mettre à jour');
+      } finally {
+        setUpdating(prev => { const next = new Set(prev); next.delete(item.id_reservation); return next; });
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (typeof globalThis.confirm === 'function' ? globalThis.confirm(message) : true) void doUpdate();
+    } else {
+      Alert.alert(label + ' la réservation', message, [
+        { text: 'Annuler', style: 'cancel' },
+        { text: label, onPress: () => { void doUpdate(); } },
+      ]);
+    }
   }
 
   if (loading) {
@@ -101,6 +143,9 @@ export default function OwnerReservationsScreen({ route, navigation }: any) {
         const total = item.prix_semaine != null
           ? Math.round((item.prix_semaine / 7) * nuits)
           : null;
+        const statusStyle = getStatusStyle(item.statut);
+        const isUpdating = updating.has(item.id_reservation);
+        const isPending = item.statut === 'en_attente' || item.statut == null;
 
         return (
           <View style={styles.card}>
@@ -118,6 +163,9 @@ export default function OwnerReservationsScreen({ route, navigation }: any) {
                 {item.tel_locataire ? (
                   <Text style={styles.guestMeta}>{item.tel_locataire}</Text>
                 ) : null}
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                <Text style={[styles.statusText, { color: statusStyle.color }]}>{statusStyle.label}</Text>
               </View>
             </View>
 
@@ -141,6 +189,29 @@ export default function OwnerReservationsScreen({ route, navigation }: any) {
               <View style={styles.priceRow}>
                 <Ionicons name="cash-outline" size={15} color="#6b7280" />
                 <Text style={styles.priceText}>Total estimé : {total} €</Text>
+              </View>
+            )}
+
+            {isPending && (
+              <View style={styles.actionsRow}>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  onPress={() => handleUpdateStatut(item, 'confirmee')}
+                  disabled={isUpdating}
+                >
+                  {isUpdating
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <><Ionicons name="checkmark-outline" size={16} color="#fff" /><Text style={styles.acceptBtnText}>Confirmer</Text></>
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.refuseBtn}
+                  onPress={() => handleUpdateStatut(item, 'refusee')}
+                  disabled={isUpdating}
+                >
+                  <Ionicons name="close-outline" size={16} color="#ef4444" />
+                  <Text style={styles.refuseBtnText}>Refuser</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -250,4 +321,39 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   priceText: { fontSize: 14, color: '#374151' },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginLeft: 'auto',
+  },
+  statusText: { fontSize: 12, fontWeight: '700' },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  acceptBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#16a34a',
+    borderRadius: 10,
+    paddingVertical: 10,
+  },
+  acceptBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  refuseBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fee2e2',
+    borderRadius: 10,
+    paddingVertical: 10,
+  },
+  refuseBtnText: { color: '#ef4444', fontWeight: '700', fontSize: 14 },
 });
