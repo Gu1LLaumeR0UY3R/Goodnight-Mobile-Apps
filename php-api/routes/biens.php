@@ -259,6 +259,8 @@ try {
         $prixSemaine = (float) ($body['prix_semaine'] ?? 0);
         $animaux = !empty($body['animaux_biens']) ? 1 : 0;
         $photo = trim((string) ($body['photo_url'] ?? ''));
+        $latitude  = isset($body['latitude'])  && is_numeric($body['latitude'])  ? (float) $body['latitude']  : null;
+        $longitude = isset($body['longitude']) && is_numeric($body['longitude']) ? (float) $body['longitude'] : null;
 
         if ($designation === '' || $rue === '') {
             jsonError('Nom du bien et adresse requis');
@@ -287,8 +289,8 @@ try {
                 'INSERT INTO biens (
                     designation_bien, rue_biens, complement_biens, superficie_biens,
                     description_biens, animaux_biens, nb_couchage, id_TypeBien,
-                    id_commune, id_locataire, statut_validation
-                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "en_attente")'
+                    id_commune, id_locataire, statut_validation, latitude, longitude
+                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "en_attente", ?, ?)'
             )->execute([
                 $designation,
                 $rue,
@@ -300,6 +302,8 @@ try {
                 $idTypeBien,
                 $idCommune,
                 $ownerId,
+                $latitude,
+                $longitude,
             ]);
 
             $bienId = (int) $pdo->lastInsertId();

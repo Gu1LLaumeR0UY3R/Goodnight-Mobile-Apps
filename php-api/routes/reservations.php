@@ -187,6 +187,52 @@ try {
         jsonSuccess(['message' => 'Réservation annulée'], 200);
     }
 
+    // ── PATCH /reservations/:id — propriétaire confirme ou refuse ─────────────
+    if ($method === 'PATCH' && $param1 !== null && ctype_digit((string) $param1)) {
+        $payload    = requireAuth();
+        $callerId   = (int) ($payload['id_locataire'] ?? 0);
+        $id_reservation = (int) $param1;
+
+        if (!$hasStatutColumn) {
+            jsonError('Fonctionnalité non disponible (colonne statut manquante)', 503);
+        }
+
+        $body   = getJsonBody();
+        $statut = trim((string) ($body['statut'] ?? ''));
+
+        if (!in_array($statut, ['confirmee', 'refusee'], true)) {
+            jsonError('Statut invalide : attendu confirmee ou refusee');
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT r.id_locataire AS id_locataire_res, b.id_locataire AS id_proprio,
+                   b.designation_bien, r.date_debut, r.date_fin, r.statut
+            FROM reservations r
+            JOIN biens b ON r.id_biens = b.id_biens
+            WHERE r.id_reservation = ?
+        ");
+        $stmt->execute([$id_reservation]);
+        $res = $stmt->fetch();
+
+        if (!$res) jsonError('Réservation introuvable', 404);
+        if ((int) $res['id_proprio'] !== $callerId) jsonError('Accès refusé', 403);
+        if ($res['statut'] === 'annulee') jsonError('Impossible de modifier une réservation annulée', 409);
+
+        $pdo->prepare('UPDATE reservations SET statut = ? WHERE id_reservation = ?')
+            ->execute([$statut, $id_reservation]);
+
+        try {
+            $label  = $statut === 'confirmee' ? 'confirmée' : 'refusée';
+            $typeN  = $statut === 'confirmee' ? 'reservation_confirmed' : 'reservation_refused';
+            $titleN = $statut === 'confirmee' ? 'Réservation confirmée' : 'Réservation refusée';
+            $msg    = "Votre réservation pour \"{$res['designation_bien']}\" du {$res['date_debut']} au {$res['date_fin']} a été {$label}.";
+            $pdo->prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)')
+                ->execute([$res['id_locataire_res'], $typeN, $titleN, $msg]);
+        } catch (PDOException $ignored) {}
+
+        jsonSuccess(['message' => 'Statut mis à jour']);
+    }
+
     jsonError('Route introuvable', 404);
 
 } catch (PDOException $e) {

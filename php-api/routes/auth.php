@@ -255,6 +255,13 @@ $body            = getJsonBody();
                 ]);
             }
 
+            // Photo de profil (optionnel)
+            $pfpLoca = trim((string) ($body['pfp_loca'] ?? ''));
+            if ($pfpLoca !== '') {
+                $pdo->prepare('UPDATE locataire SET pfp_loca = ? WHERE id_locataire = ?')
+                    ->execute([$pfpLoca, $id]);
+            }
+
             // Retourner le profil mis à jour (avec type_compte résolu)
             $stmt = $pdo->prepare(
                 "SELECT l.*,
