@@ -12,6 +12,16 @@
 // POST /biens/:id/blocages   — créer un blocage propriétaire
 // DELETE /biens/:id/blocages/:blocageId — supprimer un blocage propriétaire
 
+// Variables injectées par index.php via require (déclarées ici pour l'analyseur statique)
+/** @var string      $method */
+/** @var string|null $param1 */
+/** @var string|null $param2 */
+/** @var string|null $param3 */
+$method ??= $_SERVER['REQUEST_METHOD'];
+$param1 ??= null;
+$param2 ??= null;
+$param3 ??= null;
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function buildFilters(array $q): array
 {
@@ -58,14 +68,14 @@ function buildFilters(array $q): array
         }
     }
 
-    // Prix
+    // Prix (HAVING sur l'alias prix_semaine_min calculé par JOIN dans la requête principale)
     if (isset($q['prix_min']) && is_numeric($q['prix_min'])) {
-        $wheres[] = 'COALESCE((SELECT MIN(t.prix_semaine) FROM tarifs t WHERE t.id_biens = b.id_biens), 0) >= ?';
-        $params[] = (float) $q['prix_min'];
+        $havings[] = 'COALESCE(prix_semaine_min, 0) >= ?';
+        $hParams[] = (float) $q['prix_min'];
     }
     if (isset($q['prix_max']) && is_numeric($q['prix_max'])) {
-        $wheres[] = 'COALESCE((SELECT MIN(t.prix_semaine) FROM tarifs t WHERE t.id_biens = b.id_biens), 0) <= ?';
-        $params[] = (float) $q['prix_max'];
+        $havings[] = 'COALESCE(prix_semaine_min, 0) <= ?';
+        $hParams[] = (float) $q['prix_max'];
     }
 
     // Animaux
@@ -143,8 +153,8 @@ function buildFilters(array $q): array
 function getSortSql(string $sort): string
 {
     return match ($sort) {
-        'price_asc'   => 'COALESCE((SELECT MIN(t.prix_semaine) FROM tarifs t WHERE t.id_biens = b.id_biens), 0) ASC',
-        'price_desc'  => 'COALESCE((SELECT MIN(t.prix_semaine) FROM tarifs t WHERE t.id_biens = b.id_biens), 0) DESC',
+        'price_asc'   => 'COALESCE(prix_semaine_min, 0) ASC',
+        'price_desc'  => 'COALESCE(prix_semaine_min, 0) DESC',
         'rating_desc' => 'note_moyenne DESC',
         default       => 'b.id_biens DESC',
     };
@@ -361,7 +371,34 @@ try {
         $ownerId = (int) ($payload['id_locataire'] ?? 0);
         if ($ownerId === 0) jsonError('Token invalide', 401);
 
-        $stmt = $pdo->prepare("\n            SELECT b.*, c.ville_nom, c.ville_code_postal, tb.desc_type_bien,\n                   (SELECT pb.lien_photo FROM photos pb\n                    WHERE pb.id_biens = b.id_biens LIMIT 1) AS photo_principale,\n                   (SELECT MIN(t.prix_semaine) FROM tarifs t\n                    WHERE t.id_biens = b.id_biens) AS prix_semaine_min\n            FROM biens b\n            LEFT JOIN commune c    ON b.id_commune  = c.id_commune\n            LEFT JOIN type_bien tb ON b.id_TypeBien = tb.id_typebien\n            WHERE b.id_locataire = ?\n            ORDER BY\n              CASE b.statut_validation\n                WHEN 'en_attente' THEN 1\n                WHEN 'valide'     THEN 2\n                WHEN 'refuse'     THEN 3\n                ELSE 4\n              END,\n              b.id_biens DESC\n        ");
+        $stmt = $pdo->prepare("
+            SELECT b.*, c.ville_nom, c.ville_code_postal, tb.desc_type_bien,
+                   p_main.lien_photo     AS photo_principale,
+                   t_min.prix_semaine_min
+            FROM biens b
+            LEFT JOIN commune c    ON b.id_commune  = c.id_commune
+            LEFT JOIN type_bien tb ON b.id_TypeBien = tb.id_typebien
+            LEFT JOIN (
+                SELECT id_biens, MIN(prix_semaine) AS prix_semaine_min
+                FROM tarifs
+                GROUP BY id_biens
+            ) t_min ON t_min.id_biens = b.id_biens
+            LEFT JOIN (
+                SELECT p.id_biens, p.lien_photo
+                FROM photos p
+                INNER JOIN (SELECT id_biens, MIN(id_photo) AS min_id FROM photos GROUP BY id_biens) pmin
+                    ON p.id_biens = pmin.id_biens AND p.id_photo = pmin.min_id
+            ) p_main ON p_main.id_biens = b.id_biens
+            WHERE b.id_locataire = ?
+            ORDER BY
+              CASE b.statut_validation
+                WHEN 'en_attente' THEN 1
+                WHEN 'valide'     THEN 2
+                WHEN 'refuse'     THEN 3
+                ELSE 4
+              END,
+              b.id_biens DESC
+        ");
         $stmt->execute([$ownerId]);
         jsonSuccess($stmt->fetchAll());
     }
@@ -520,12 +557,18 @@ try {
 
         $stmt = $pdo->prepare("
             SELECT COUNT(*) AS total FROM (
-                SELECT b.id_biens
+                SELECT b.id_biens,
+                       MAX(t_min.prix_semaine_min) AS prix_semaine_min
                 FROM biens b
                 LEFT JOIN commune c     ON b.id_commune  = c.id_commune
                 LEFT JOIN type_bien tb  ON b.id_TypeBien = tb.id_typebien
                 LEFT JOIN commentaires com
                        ON b.id_biens = com.id_biens AND com.statut = 'publie'
+                LEFT JOIN (
+                    SELECT id_biens, MIN(prix_semaine) AS prix_semaine_min
+                    FROM tarifs
+                    GROUP BY id_biens
+                ) t_min ON t_min.id_biens = b.id_biens
                 WHERE {$w}
                 GROUP BY b.id_biens
                 {$h}
@@ -713,11 +756,68 @@ try {
         }
     }
 
+    // ── DELETE /biens/:id — supprimer un bien (propriétaire uniquement) ────────
+    if ($method === 'DELETE' && $param1 !== null && ctype_digit((string) $param1) && $param2 === null) {
+        $payload = requireAuth();
+        $ownerId = (int) ($payload['id_locataire'] ?? 0);
+        if ($ownerId === 0) jsonError('Token invalide', 401);
+
+        $bienId = (int) $param1;
+        requireOwnedBien($pdo, $bienId, $ownerId);
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('DELETE FROM commentaires WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM favoris WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM blocages WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM reservations WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM tarifs WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM photos WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->prepare('DELETE FROM biens WHERE id_biens = ?')->execute([$bienId]);
+            $pdo->commit();
+            jsonSuccess(['message' => 'Bien supprimé avec succès']);
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    // ── GET /biens/:id/reservations — réservations d'un bien (propriétaire) ──
+    if (
+        $method === 'GET'
+        && $param1 !== null && ctype_digit((string) $param1)
+        && $param2 === 'reservations'
+        && $param3 === null
+    ) {
+        $payload = requireAuth();
+        $ownerId = (int) ($payload['id_locataire'] ?? 0);
+        if ($ownerId === 0) jsonError('Token invalide', 401);
+
+        $bienId = (int) $param1;
+        requireOwnedBien($pdo, $bienId, $ownerId);
+
+        $stmt = $pdo->prepare("
+            SELECT r.*,
+                   l.nom_locataire, l.prenom_locataire, l.email_locataire, l.tel_locataire,
+                   t.prix_semaine,
+                   DATEDIFF(r.date_fin, r.date_debut) AS nb_nuits
+            FROM reservations r
+            LEFT JOIN locataire l ON r.id_locataire = l.id_locataire
+            LEFT JOIN tarifs t    ON r.id_tarif     = t.id_tarif
+            WHERE r.id_biens = ?
+            ORDER BY r.date_debut ASC
+        ");
+        $stmt->execute([$bienId]);
+        jsonSuccess($stmt->fetchAll());
+    }
+
     // ── GET /biens/:id ────────────────────────────────────────────────────────
     if ($param1 !== null && ctype_digit((string) $param1)) {
         $id   = (int) $param1;
         $stmt = $pdo->prepare("
-            SELECT b.*, c.ville_nom, c.ville_code_postal, c.ville_latitude_deg, c.ville_longitude_deg,
+            SELECT b.*, c.ville_nom, c.ville_code_postal,
+                   COALESCE(b.latitude,  c.ville_latitude_deg)  AS ville_latitude_deg,
+                   COALESCE(b.longitude, c.ville_longitude_deg) AS ville_longitude_deg,
                    tb.desc_type_bien,
                    COALESCE(AVG(com.note), 0)  AS note_moyenne,
                    COUNT(com.id_commentaire)    AS nb_avis,
@@ -752,19 +852,30 @@ try {
         = buildFilters($_GET);
 
     $stmt = $pdo->prepare("
-        SELECT b.*, c.ville_nom, c.ville_code_postal, c.ville_latitude_deg, c.ville_longitude_deg,
+        SELECT b.*, c.ville_nom, c.ville_code_postal,
+               COALESCE(b.latitude,  c.ville_latitude_deg)  AS ville_latitude_deg,
+               COALESCE(b.longitude, c.ville_longitude_deg) AS ville_longitude_deg,
                tb.desc_type_bien,
-               COALESCE(AVG(com.note), 0) AS note_moyenne,
-               COUNT(com.id_commentaire)  AS nb_avis,
-               (SELECT pb.lien_photo FROM photos pb
-                WHERE pb.id_biens = b.id_biens LIMIT 1) AS photo_principale,
-               (SELECT MIN(t.prix_semaine) FROM tarifs t
-                WHERE t.id_biens = b.id_biens)           AS prix_semaine_min
+               COALESCE(AVG(com.note), 0)      AS note_moyenne,
+               COUNT(com.id_commentaire)       AS nb_avis,
+               MAX(p_main.lien_photo)          AS photo_principale,
+               MAX(t_min.prix_semaine_min)     AS prix_semaine_min
         FROM biens b
         LEFT JOIN commune c     ON b.id_commune  = c.id_commune
         LEFT JOIN type_bien tb  ON b.id_TypeBien = tb.id_typebien
         LEFT JOIN commentaires com
                ON b.id_biens = com.id_biens AND com.statut = 'publie'
+        LEFT JOIN (
+            SELECT id_biens, MIN(prix_semaine) AS prix_semaine_min
+            FROM tarifs
+            GROUP BY id_biens
+        ) t_min ON t_min.id_biens = b.id_biens
+        LEFT JOIN (
+            SELECT p.id_biens, p.lien_photo
+            FROM photos p
+            INNER JOIN (SELECT id_biens, MIN(id_photo) AS min_id FROM photos GROUP BY id_biens) pmin
+                ON p.id_biens = pmin.id_biens AND p.id_photo = pmin.min_id
+        ) p_main ON p_main.id_biens = b.id_biens
         WHERE {$w}
         GROUP BY b.id_biens
         {$h}
