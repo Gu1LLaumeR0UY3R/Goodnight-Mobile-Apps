@@ -29,7 +29,6 @@ interface AuthContextType {
     is_entreprise: boolean,
     siret: string | null
   ) => Promise<void>;
-  loginWithGoogle: (googleToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -106,11 +105,6 @@ function useAuthProvider(): AuthContextType {
     setUser(u);
   }
 
-  async function loginWithGoogle(googleToken: string) {
-    const { user: u } = await authService.loginWithGoogle(googleToken);
-    setUser(u);
-  }
-
   async function logout() {
     await authService.logout();
     setUser(null);
@@ -127,7 +121,6 @@ function useAuthProvider(): AuthContextType {
     updateUser,
     login,
     register,
-    loginWithGoogle,
     logout,
   };
 }

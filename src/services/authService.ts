@@ -76,13 +76,6 @@ export const authService = {
     return data;
   },
 
-  async loginWithGoogle(googleToken: string): Promise<AuthResponse> {
-    const data = await apiFetch<AuthResponse>('/auth/google', 'POST', { token: googleToken });
-    await saveToken(data.token);
-    await saveUserCache(data.user);
-    return data;
-  },
-
   async logout(): Promise<void> {
     await deleteToken();
     await deleteCachedUser();
