@@ -53,6 +53,8 @@ export default function AddBienScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gpsLatitude, setGpsLatitude] = useState('');
+  const [gpsLongitude, setGpsLongitude] = useState('');
   const communeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -147,6 +149,8 @@ export default function AddBienScreen({ navigation }: any) {
         id_commune: selectedCommune.id_commune,
         prix_semaine: prixValue,
         photo_url: finalPhoto,
+        latitude:  (() => { const v = parseFloat(gpsLatitude.replace(',', '.')); return isNaN(v) ? undefined : v; })(),
+        longitude: (() => { const v = parseFloat(gpsLongitude.replace(',', '.')); return isNaN(v) ? undefined : v; })(),
       });
       navigation.goBack();
     } catch (e: any) {
@@ -342,6 +346,31 @@ export default function AddBienScreen({ navigation }: any) {
           textAlignVertical="top"
         />
 
+        <Text style={styles.label}>Coordonnées GPS (optionnel)</Text>
+        <Text style={styles.gpsHint}>Précise la position exacte sur la carte. Laissez vide pour utiliser celle de la commune.</Text>
+        <View style={styles.inlineRow}>
+          <View style={styles.inlineField}>
+            <Text style={styles.label}>Latitude</Text>
+            <TextInput
+              style={styles.input}
+              value={gpsLatitude}
+              onChangeText={setGpsLatitude}
+              keyboardType="decimal-pad"
+              placeholder="48.8566"
+            />
+          </View>
+          <View style={styles.inlineField}>
+            <Text style={styles.label}>Longitude</Text>
+            <TextInput
+              style={styles.input}
+              value={gpsLongitude}
+              onChangeText={setGpsLongitude}
+              keyboardType="decimal-pad"
+              placeholder="2.3522"
+            />
+          </View>
+        </View>
+
         <View style={styles.switchRow}>
           <View>
             <Text style={styles.switchTitle}>Animaux acceptés</Text>
@@ -378,6 +407,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   textarea: { minHeight: 110 },
+  gpsHint: { fontSize: 12, color: '#64748b', marginBottom: 10, lineHeight: 18 },
   dropdown: {
     marginTop: -8,
     marginBottom: 14,
