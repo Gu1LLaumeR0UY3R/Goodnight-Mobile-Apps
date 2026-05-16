@@ -122,7 +122,14 @@ export default function ReservationsScreen({ navigation }: any) {
         const photoUrl = r.photo_principale ? getImageUrl(r.photo_principale) : null;
         const isCancelling = cancelling === r.id_reservation;
         return (
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Explorer', {
+              screen: 'BienDetail',
+              params: { id: r.id_biens },
+            })}
+          >
             {photoUrl ? (
               <Image source={{ uri: photoUrl }} style={styles.cardPhoto} resizeMode="cover" />
             ) : (
@@ -166,7 +173,7 @@ export default function ReservationsScreen({ navigation }: any) {
                 )}
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         );
       }}
     />
