@@ -67,6 +67,9 @@ export interface Bien {
   photo_principale?: string;
   ville_latitude_deg?: number;
   ville_longitude_deg?: number;
+  // Coordonnées propres au bien (si renseignées, priorité sur celles de la commune)
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Commune {
