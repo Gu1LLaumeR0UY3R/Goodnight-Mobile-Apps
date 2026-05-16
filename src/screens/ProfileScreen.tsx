@@ -48,7 +48,12 @@ export default function ProfileScreen({ navigation }: any) {
 
       {/* Menu */}
       <View style={styles.menu}>
-        <MenuItem icon="business-outline" label="Mes biens" onPress={() => navigation.navigate('MyBiens')} />
+        {user?.type_compte === 'proprietaire' && (
+          <MenuItem icon="business-outline" label="Mes biens" onPress={() => navigation.navigate('MyBiens')} />
+        )}
+        {user?.type_compte === 'proprietaire' && (
+          <MenuItem icon="calendar-outline" label="Réservations reçues" onPress={() => navigation.navigate('OwnerReservations')} />
+        )}
         <MenuItem icon="airplane-outline" label="Mes voyages"    onPress={() => navigation.navigate('Trips')} />
         <MenuItem icon="heart-outline"    label="Mes favoris"    onPress={() => navigation.navigate('Favorites')} />
         <MenuItem
@@ -58,7 +63,7 @@ export default function ProfileScreen({ navigation }: any) {
           onPress={() => navigation.navigate('Notifications')}
         />
         <MenuItem icon="map-outline" label="Carte" onPress={() => navigation.navigate('Map')} />
-        <MenuItem icon="settings-outline" label="Paramètres"     onPress={() => {}} />
+        <MenuItem icon="create-outline" label="Modifier mon profil" onPress={() => navigation.navigate('EditProfile')} />
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>

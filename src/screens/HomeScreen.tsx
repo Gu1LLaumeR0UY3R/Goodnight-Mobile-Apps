@@ -34,7 +34,7 @@ import {
   AppState, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Slider from '@react-native-community/slider';
+
 import { Calendar, DateData } from 'react-native-calendars';
 import { apiFetch, getImageUrl } from '../services/apiClient';
 import { favorisService } from '../services/favorisService';
@@ -929,7 +929,10 @@ const styles = StyleSheet.create({
   priceSep:     { fontSize: 15, color: '#9ca3af' },
   sliderRow:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sliderBound:  { fontSize: 11, color: '#9ca3af', width: 36, textAlign: 'center' },
-  sliderSubLabel:{ fontSize: 11, color: '#6b7280', marginBottom: -4, marginLeft: 2 },
+  sliderSubLabel:{ fontSize: 11, color: '#6b7280', marginBottom: 4, marginLeft: 2 },
+  priceInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 16 },
+  priceInputGroup: { flex: 1 },
+  priceInput:    { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, backgroundColor: '#f9fafb', color: '#111827' },
 
   // Calendar
   calendarBox:   { borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb', overflow: 'hidden', marginBottom: 4 },

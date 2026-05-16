@@ -25,8 +25,10 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -164,6 +166,40 @@ export default function MyBiensScreen({ navigation }: any) {
                 <Ionicons name="calendar-outline" size={16} color="#1d4ed8" />
                 <Text style={styles.actionBtnText}>Blocages</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('OwnerReservations', { bienId: item.id_biens, bienTitle: item.designation_bien })}>
+                <Ionicons name="people-outline" size={16} color="#1d4ed8" />
+                <Text style={styles.actionBtnText}>Réserv.</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.actionBtnDanger]}
+                onPress={() => {
+                  const doDelete = async () => {
+                    try {
+                      await biensService.delete(item.id_biens);
+                      setBiens(prev => prev.filter(b => b.id_biens !== item.id_biens));
+                    } catch (e: any) {
+                      const msg = e?.message ?? 'Erreur lors de la suppression';
+                      if (Platform.OS === 'web') window.alert(msg);
+                      else Alert.alert('Erreur', msg);
+                    }
+                  };
+                  if (Platform.OS === 'web') {
+                    if (window.confirm(`Supprimer « ${item.designation_bien} » ? Cette action est irréversible.`)) doDelete();
+                  } else {
+                    Alert.alert(
+                      'Supprimer ce bien',
+                      `« ${item.designation_bien} » sera définitivement supprimé.`,
+                      [
+                        { text: 'Annuler', style: 'cancel' },
+                        { text: 'Supprimer', style: 'destructive', onPress: doDelete },
+                      ]
+                    );
+                  }
+                }}
+              >
+                <Ionicons name="trash-outline" size={16} color="#dc2626" />
+                <Text style={[styles.actionBtnText, { color: '#dc2626' }]}>Supprimer</Text>
+              </TouchableOpacity>
             </View>
           </View>
         );
@@ -275,6 +311,9 @@ const styles = StyleSheet.create({
     color: '#1d4ed8',
     fontWeight: '700',
     fontSize: 13,
+  },
+  actionBtnDanger: {
+    backgroundColor: '#fee2e2',
   },
   statusChip: {
     borderRadius: 999,

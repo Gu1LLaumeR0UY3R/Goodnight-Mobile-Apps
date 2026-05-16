@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -201,13 +203,33 @@ export default function BienBlocagesScreen({ route }: any) {
     setCalendarMarks(buildBlockedMarks(unavailableRanges));
   }
 
-  async function handleDelete(blocageId: number) {
-    try {
-      await biensService.deleteBlocage(bienId, blocageId);
-      setBlocages((prev) => prev.filter((item) => item.id_blocage !== blocageId));
-    } catch (e: any) {
-      setError(e?.message ?? 'Impossible de supprimer le blocage');
+  function handleDelete(blocageId: number) {
+    if (Platform.OS === 'web') {
+      if (!window.confirm('Supprimer ce blocage ? La période redeviendra disponible à la réservation.')) return;
+      biensService.deleteBlocage(bienId, blocageId)
+        .then(() => setBlocages((prev) => prev.filter((item) => item.id_blocage !== blocageId)))
+        .catch((e: any) => setError(e?.message ?? 'Impossible de supprimer le blocage'));
+      return;
     }
+    Alert.alert(
+      'Supprimer ce blocage ?',
+      'La période redeviendra disponible à la réservation.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await biensService.deleteBlocage(bienId, blocageId);
+              setBlocages((prev) => prev.filter((item) => item.id_blocage !== blocageId));
+            } catch (e: any) {
+              setError(e?.message ?? 'Impossible de supprimer le blocage');
+            }
+          },
+        },
+      ]
+    );
   }
 
   if (loading) {

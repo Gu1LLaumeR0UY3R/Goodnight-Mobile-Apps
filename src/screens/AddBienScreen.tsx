@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { apiFetch } from '../services/apiClient';
+import { apiFetch, apiUpload } from '../services/apiClient';
 import { biensService } from '../services/biensService';
 import { ErrorToast } from '../components/ErrorToast';
 import type { CommuneOption } from '../types/models';
@@ -43,6 +43,7 @@ export default function AddBienScreen({ navigation }: any) {
   const [prixSemaine, setPrixSemaine] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
   const [localPhotoUri, setLocalPhotoUri] = useState('');
+  const [webPhotoFile, setWebPhotoFile] = useState<File | null>(null);
   const [animaux, setAnimaux] = useState(false);
   const [types, setTypes] = useState<TypeBien[]>([]);
   const [selectedType, setSelectedType] = useState<number | null>(null);
@@ -124,6 +125,11 @@ export default function AddBienScreen({ navigation }: any) {
       let finalPhoto: string | undefined;
       if (photoMode === 'url') {
         finalPhoto = photoUrl.trim() || undefined;
+      } else if (Platform.OS === 'web' && webPhotoFile) {
+        const fd = new FormData();
+        fd.append('photo', webPhotoFile);
+        const uploaded = await apiUpload<{ path: string }>('/biens/upload-photo', fd);
+        finalPhoto = uploaded.path;
       } else if (localPhotoUri) {
         const uploaded = await biensService.uploadPhoto(localPhotoUri);
         finalPhoto = uploaded.path;
@@ -148,6 +154,19 @@ export default function AddBienScreen({ navigation }: any) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function pickFileWeb() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setWebPhotoFile(file);
+      setLocalPhotoUri(URL.createObjectURL(file));
+    };
+    input.click();
   }
 
   async function pickFromLibrary() {
@@ -292,14 +311,23 @@ export default function AddBienScreen({ navigation }: any) {
               </View>
             )}
             <View style={styles.localPhotoActions}>
-              <TouchableOpacity style={styles.localBtn} onPress={pickFromLibrary}>
-                <Ionicons name="images-outline" size={16} color="#1d4ed8" />
-                <Text style={styles.localBtnText}>Galerie</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.localBtn} onPress={takePhoto}>
-                <Ionicons name="camera-outline" size={16} color="#1d4ed8" />
-                <Text style={styles.localBtnText}>Caméra</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'web' ? (
+                <TouchableOpacity style={styles.localBtn} onPress={pickFileWeb}>
+                  <Ionicons name="folder-outline" size={16} color="#1d4ed8" />
+                  <Text style={styles.localBtnText}>Parcourir…</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.localBtn} onPress={pickFromLibrary}>
+                    <Ionicons name="images-outline" size={16} color="#1d4ed8" />
+                    <Text style={styles.localBtnText}>Galerie</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.localBtn} onPress={takePhoto}>
+                    <Ionicons name="camera-outline" size={16} color="#1d4ed8" />
+                    <Text style={styles.localBtnText}>Caméra</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         )}

@@ -45,7 +45,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { biensService } from '../services/biensService';
-import { getImageUrl } from '../services/apiClient';
+import { apiUpload, getImageUrl } from '../services/apiClient';
 import { ErrorToast } from '../components/ErrorToast';
 import type { Photo } from '../types/models';
 
@@ -146,6 +146,30 @@ export default function GalerieBienScreen({ route }: any) {
     }
   }
 
+  function pickAndUploadWeb() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setAdding(true);
+      try {
+        const formData = new FormData();
+        formData.append('photo', file);
+        const uploaded = await apiUpload<{ path: string; message: string }>('/biens/upload-photo', formData);
+        const added = await biensService.addPhoto(bienId, uploaded.path);
+        setPhotos((prev) => [...prev, { id_photo: added.id_photo, lien_photo: uploaded.path, is_principal: false }]);
+        setAddMode(null);
+      } catch (e: any) {
+        setError(e?.message ?? 'Impossible d\'uploader la photo');
+      } finally {
+        setAdding(false);
+      }
+    };
+    input.click();
+  }
+
   const numColumns = 2;
 
   return (
@@ -195,14 +219,23 @@ export default function GalerieBienScreen({ route }: any) {
             </View>
           ) : (
             <View style={styles.localRow}>
-              <TouchableOpacity style={styles.localBtn} onPress={() => pickAndUpload('library')} disabled={adding}>
-                <Ionicons name="images-outline" size={18} color="#1d4ed8" />
-                <Text style={styles.localBtnText}>Galerie</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.localBtn} onPress={() => pickAndUpload('camera')} disabled={adding}>
-                <Ionicons name="camera-outline" size={18} color="#1d4ed8" />
-                <Text style={styles.localBtnText}>Caméra</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'web' ? (
+                <TouchableOpacity style={styles.localBtn} onPress={pickAndUploadWeb} disabled={adding}>
+                  <Ionicons name="folder-outline" size={18} color="#1d4ed8" />
+                  <Text style={styles.localBtnText}>Parcourir…</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.localBtn} onPress={() => pickAndUpload('library')} disabled={adding}>
+                    <Ionicons name="images-outline" size={18} color="#1d4ed8" />
+                    <Text style={styles.localBtnText}>Galerie</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.localBtn} onPress={() => pickAndUpload('camera')} disabled={adding}>
+                    <Ionicons name="camera-outline" size={18} color="#1d4ed8" />
+                    <Text style={styles.localBtnText}>Caméra</Text>
+                  </TouchableOpacity>
+                </>
+              )}
               {adding && <ActivityIndicator color="#2563eb" />}
             </View>
           )}

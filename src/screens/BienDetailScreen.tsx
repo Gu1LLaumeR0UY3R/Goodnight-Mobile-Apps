@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, FlatList, Image, TouchableOpacity,
-  ActivityIndicator, StyleSheet, Dimensions,
+  ActivityIndicator, StyleSheet, Dimensions, TextInput,
 } from 'react-native';
 import { Calendar, type DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,6 +66,15 @@ export default function BienDetailScreen({ route, navigation }: any) {
   const [calendarMarks, setCalendarMarks] = useState<MarkedDates>({});
   const [dateDebut, setDateDebut] = useState<string | null>(null);
   const [dateFin, setDateFin] = useState<string | null>(null);
+
+  // Formulaire d'avis
+  const [commentNote,        setCommentNote]        = useState<number>(5);
+  const [commentTitre,       setCommentTitre]       = useState('');
+  const [commentContenu,     setCommentContenu]     = useState('');
+  const [commentSubmitting,  setCommentSubmitting]  = useState(false);
+  const [commentError,       setCommentError]       = useState<string | null>(null);
+  const [alreadyCommented,   setAlreadyCommented]   = useState(false);
+  const [userComment,        setUserComment]        = useState<Commentaire | null>(null);
 
   function resetReservationSelection(nextBlockedRanges: DisponibilitePlage[] = blockedRanges) {
     setDateDebut(null);
@@ -170,6 +179,10 @@ export default function BienDetailScreen({ route, navigation }: any) {
         if (cancelled) return;
         setBien(bienData);
         setCommentaires(comData);
+        if (isAuthenticated && user) {
+          const mine = comData.find(c => c.id_locataire === user.id_locataire);
+          if (mine) { setAlreadyCommented(true); setUserComment(mine); }
+        }
         setBlockedRanges(dispos);
         setCalendarMarks(buildBlockedMarks(dispos));
         if (isAuthenticated) {
@@ -216,6 +229,38 @@ export default function BienDetailScreen({ route, navigation }: any) {
       else          { await favorisService.add(bien.id_biens);    setIsFavori(true);  }
     } catch {}
     setFavLoading(false);
+  }
+
+  async function submitComment() {
+    if (!commentContenu.trim()) {
+      setCommentError('Le texte de l\'avis est requis');
+      return;
+    }
+    setCommentError(null);
+    setCommentSubmitting(true);
+    try {
+      await commentairesService.create({
+        id_biens: bien!.id_biens,
+        note:     commentNote,
+        titre:    commentTitre.trim() || undefined,
+        contenu:  commentContenu.trim(),
+      });
+      const newComments = await commentairesService.getByBien(bien!.id_biens);
+      setCommentaires(newComments);
+      const mine = newComments.find(c => c.id_locataire === user?.id_locataire);
+      if (mine) setUserComment(mine);
+      setCommentContenu('');
+      setCommentTitre('');
+      setAlreadyCommented(true);
+    } catch (e: any) {
+      if ((e.message ?? '').includes('d\u00e9j\u00e0 comment\u00e9')) {
+        setAlreadyCommented(true);
+      } else {
+        setCommentError(e.message ?? 'Erreur lors de la soumission');
+      }
+    } finally {
+      setCommentSubmitting(false);
+    }
   }
 
   // ── Chargement ──
@@ -449,6 +494,83 @@ export default function BienDetailScreen({ route, navigation }: any) {
             <Text style={styles.noReviews}>Aucun avis pour le moment.</Text>
           </View>
         )}
+
+        {/* ── Formulaire d'avis ── */}
+        {isAuthenticated && !isOwner && !alreadyCommented && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Laisser un avis</Text>
+
+            {/* Sélecteur d'étoiles */}
+            <View style={styles.commentStarRow}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <TouchableOpacity key={i} onPress={() => setCommentNote(i)}>
+                  <Ionicons
+                    name={i <= commentNote ? 'star' : 'star-outline'}
+                    size={30}
+                    color="#fbbf24"
+                  />
+                </TouchableOpacity>
+              ))}
+              <Text style={styles.commentNoteLabel}>{commentNote} / 5</Text>
+            </View>
+
+            <TextInput
+              style={styles.commentInput}
+              value={commentTitre}
+              onChangeText={setCommentTitre}
+              placeholder="Titre (optionnel)"
+              maxLength={80}
+            />
+            <TextInput
+              style={[styles.commentInput, styles.commentTextarea]}
+              value={commentContenu}
+              onChangeText={setCommentContenu}
+              placeholder="Votre avis…"
+              multiline
+              numberOfLines={4}
+              maxLength={1000}
+              textAlignVertical="top"
+            />
+
+            {!!commentError && (
+              <Text style={styles.commentErrorText}>{commentError}</Text>
+            )}
+
+            <TouchableOpacity
+              style={[styles.commentSubmitBtn, commentSubmitting && { opacity: 0.65 }]}
+              onPress={submitComment}
+              disabled={commentSubmitting}
+            >
+              {commentSubmitting
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.commentSubmitBtnText}>Publier l'avis</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isAuthenticated && !isOwner && alreadyCommented && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Votre avis</Text>
+            {userComment && (
+              <View style={styles.reviewMyCard}>
+                <View style={styles.reviewMyHeader}>
+                  <StarRow note={userComment.note ?? 0} />
+                  <Text style={styles.reviewMyDate}>
+                    {new Date(userComment.date_creation).toLocaleDateString('fr-FR')}
+                  </Text>
+                </View>
+                {userComment.titre ? <Text style={styles.reviewMyTitle}>{userComment.titre}</Text> : null}
+                <Text style={styles.reviewMyContent}>{userComment.contenu}</Text>
+              </View>
+            )}
+            <View style={styles.commentPostedBox}>
+              <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+              <Text style={styles.commentPostedText}>Vous avez déjà laissé un avis pour ce bien.</Text>
+            </View>
+          </View>
+        )}
+
       </View>
 
       {/* ── Barre basse : prix + réserver ── */}
@@ -539,6 +661,22 @@ const styles = StyleSheet.create({
   reserveInlineBtnDisabled: { backgroundColor: '#93c5fd' },
   reserveInlineBtnText:{ color: '#fff', fontWeight: '700', fontSize: 14 },
   noReviews:          { fontSize: 14, color: '#9ca3af', fontStyle: 'italic' },
+
+  // Formulaire avis
+  commentStarRow:       { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
+  commentNoteLabel:     { marginLeft: 8, fontSize: 13, color: '#6b7280' },
+  commentInput:         { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827', backgroundColor: '#fff', marginBottom: 10 },
+  commentTextarea:      { height: 90, textAlignVertical: 'top' },
+  commentErrorText:     { fontSize: 13, color: '#dc2626', marginBottom: 8 },
+  commentSubmitBtn:     { backgroundColor: '#2563eb', borderRadius: 10, alignItems: 'center', paddingVertical: 11 },
+  commentSubmitBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  commentPostedBox:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  commentPostedText:    { fontSize: 14, color: '#15803d', fontWeight: '600' },
+  reviewMyCard:         { backgroundColor: '#f0fdf4', borderRadius: 10, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#bbf7d0' },
+  reviewMyHeader:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  reviewMyDate:         { fontSize: 12, color: '#6b7280' },
+  reviewMyTitle:        { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  reviewMyContent:      { fontSize: 14, color: '#374151', lineHeight: 20 },
 
   commentCard:        { backgroundColor: '#f9fafb', borderRadius: 10, padding: 14, marginBottom: 10 },
   commentHeader:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
