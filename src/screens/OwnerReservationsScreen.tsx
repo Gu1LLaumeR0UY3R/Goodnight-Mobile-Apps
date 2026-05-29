@@ -1,5 +1,6 @@
 // src/screens/OwnerReservationsScreen.tsx
 // Réservations reçues sur un bien spécifique (vue propriétaire)
+// Role: pilotage proprietaire des demandes de reservation liees a un bien donne.
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,

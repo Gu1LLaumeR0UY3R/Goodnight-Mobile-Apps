@@ -35,6 +35,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { Bien } from '../types/models';
 
+// Badge métier qui explique le statut de l'annonce au propriétaire.
+
 interface StatusBadgeProps {
   bien: Bien;
 }

@@ -1,5 +1,6 @@
 // src/screens/EditProfileScreen.tsx
 // Permet à l'utilisateur connecté de modifier son profil (nom, email, tel, mdp)
+// Role: edition du profil, du mot de passe et de la photo de profil de l'utilisateur connecte.
 
 import React, { useState } from 'react';
 import {

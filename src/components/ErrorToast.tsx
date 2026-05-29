@@ -5,6 +5,8 @@
 import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// Toast d'erreur transversal pour les formulaires et appels réseau.
+
 interface ErrorToastProps {
   message: string | null;
   onDismiss?: () => void;

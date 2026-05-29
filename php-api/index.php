@@ -1,5 +1,8 @@
 <?php
 // php-api/index.php — Routeur frontal de l'API Goodnight (PHP 8 + PDO)
+// Ce fichier reçoit toutes les requêtes API, les découpe par ressource,
+// puis délègue aux routes métier. C'est le point d'entrée du contrôleur backend.
+// Rôle: contrôleur frontal (front controller) de toute l'API.
 //
 // ─── Configuration Apache requise (C:\xampp\apache\conf\httpd.conf) ──────────
 //   Alias /api "C:/Users/er1go/Projets React/Goodnight/php-api"

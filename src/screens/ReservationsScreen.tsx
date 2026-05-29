@@ -1,5 +1,6 @@
 // src/screens/ReservationsScreen.tsx
 // Issue #16 — Liste des réservations du locataire connecté
+// Role: historique et suivi des reservations du locataire connecte.
 
 import React, { useState } from 'react';
 import {
@@ -12,6 +13,8 @@ import { reservationsService } from '../services/reservationsService';
 import { getImageUrl } from '../services/apiClient';
 import { getErrorMessage } from '../utils/errorHandler';
 import type { Reservation } from '../types/models';
+
+// Liste des réservations du locataire connecté, avec annulation et rafraîchissement au focus.
 
 export default function ReservationsScreen({ navigation }: any) {
   const [reservations, setReservations] = useState<Reservation[]>([]);

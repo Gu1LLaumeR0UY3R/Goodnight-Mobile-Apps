@@ -42,6 +42,8 @@ import { biensService } from '../services/biensService';
 import { ErrorToast } from '../components/ErrorToast';
 import type { Bien, CommuneOption } from '../types/models';
 
+// Écran propriétaire de modification: formulaire prérempli, autocomplete commune et sauvegarde.
+
 interface TypeBien {
   id_typebien: number;
   desc_type_bien: string;

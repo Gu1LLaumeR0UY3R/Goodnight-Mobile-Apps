@@ -2,6 +2,11 @@
 // php-api/routes/reservations.php
 // GET  /reservations  — liste des réservations de l'utilisateur (authentifié)
 // POST /reservations  — créer une réservation (authentifié)
+// Rôle: contrôleur métier des réservations, annulations et statuts.
+/** @var string      $method */
+/** @var string|null $param1 */
+/** @var string|null $param2 */
+/** @var string|null $param3 */
 
 $payload = requireAuth();
 $userId  = (int) $payload['id_locataire'];

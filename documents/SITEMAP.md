@@ -58,6 +58,28 @@ Goodnight/
 
 ---
 
+## Lecture MVC pour la soutenance
+
+### Backend PHP
+
+| Couche | Fichiers |
+|---|---|
+| Controller frontal | `php-api/index.php`, `php-api/router.php` |
+| Controllers métier | `php-api/routes/auth.php`, `php-api/routes/biens.php`, `php-api/routes/reservations.php`, `php-api/routes/favoris.php`, `php-api/routes/commentaires.php`, `php-api/routes/notifications.php` |
+| Models / persistance | `php-api/config/database.php`, `php-api/seed_goodnight.sql`, `php-api/patches/*.sql` |
+| Helpers métier / sécurité | `php-api/core/helpers.php`, `php-api/core/jwt.php`, `php-api/core/auth_middleware.php` |
+
+### Frontend React Native
+
+| Couche | Fichiers |
+|---|---|
+| Views | `src/screens/*.tsx`, `src/components/*.tsx` |
+| Controller logique | `src/navigation/AppNavigator.tsx`, `src/navigation/ProtectedRoute.tsx`, `src/hooks/useAuth.tsx`, `src/hooks/useBiens.ts`, `src/hooks/useReservations.ts` |
+| Models / contrats | `src/types/models.ts`, `src/types/reservation.ts`, `src/types/api.ts`, `src/types/auth.ts` |
+| Acces donnees | `src/services/apiClient.ts`, `src/services/authService.ts`, `src/services/biensService.ts`, `src/services/reservationsService.ts`, `src/services/favorisService.ts`, `src/services/commentairesService.ts`, `src/services/notificationsService.ts` |
+
+---
+
 ## src/types/ — Interfaces TypeScript
 
 | Fichier | Rôle | Utilisé par |

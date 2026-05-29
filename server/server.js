@@ -1,5 +1,6 @@
 // server/server.js
 // Point d'entrée principal du serveur API Goodnight
+// Rôle: front controller Express qui centralise les routes et les middlewares.
 
 require('dotenv').config();
 const express = require('express');

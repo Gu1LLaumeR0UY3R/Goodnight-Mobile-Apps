@@ -1,3 +1,5 @@
+// src/screens/BienBlocagesScreen.tsx
+// Role: gestion des plages d'indisponibilite d'un bien cote proprietaire.
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,6 +22,8 @@ import { biensService } from '../services/biensService';
 import { reservationsService } from '../services/reservationsService';
 import type { Blocage } from '../types/models';
 import type { DisponibilitePlage } from '../types/reservation';
+
+// Écran propriétaire des blocages: périodes d'indisponibilité par motif métier.
 
 const QUICK_MOTIFS = ['Ménage', 'Entretien', 'Réparation', 'Usage personnel'];
 

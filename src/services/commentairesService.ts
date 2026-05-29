@@ -1,7 +1,8 @@
 // src/services/commentairesService.ts
 // Issue #14 — Service des commentaires et avis
+// Role: appels API lies aux avis publies et a leur creation.
 
-import { apiFetch } from './apiClient';
+import { fetchApi } from './apiClient';
 import type { Commentaire } from '../types/models';
 
 interface CreateCommentaire {
@@ -13,18 +14,18 @@ interface CreateCommentaire {
 
 export const commentairesService = {
   async getByBien(id_biens: number): Promise<Commentaire[]> {
-    return apiFetch<Commentaire[]>(`/commentaires/${id_biens}`);
+    return fetchApi<Commentaire[]>(`/commentaires/${id_biens}`);
   },
 
   async create(data: CreateCommentaire): Promise<Commentaire> {
-    return apiFetch<Commentaire>('/commentaires', 'POST', data);
+    return fetchApi<Commentaire>('/commentaires', 'POST', data);
   },
 
   async likeCommentaire(id_commentaire: number): Promise<void> {
-    return apiFetch<void>(`/commentaires/${id_commentaire}/like`, 'POST');
+    return fetchApi<void>(`/commentaires/${id_commentaire}/like`, 'POST');
   },
 
   async signaler(id_commentaire: number): Promise<void> {
-    return apiFetch<void>(`/commentaires/${id_commentaire}/signaler`, 'POST');
+    return fetchApi<void>(`/commentaires/${id_commentaire}/signaler`, 'POST');
   },
 };

@@ -2,6 +2,11 @@
 // php-api/routes/notifications.php
 // GET /notifications        — liste des notifications utilisateur
 // PUT /notifications/:id    — marquer une notification comme lue
+// Rôle: contrôleur métier du centre de notifications utilisateur.
+/** @var string      $method */
+/** @var string|null $param1 */
+/** @var string|null $param2 */
+/** @var string|null $param3 */
 
 $payload = requireAuth();
 $userId  = (int) $payload['id_locataire'];

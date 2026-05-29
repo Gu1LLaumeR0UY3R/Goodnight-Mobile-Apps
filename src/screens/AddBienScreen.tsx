@@ -1,3 +1,5 @@
+// src/screens/AddBienScreen.tsx
+// Role: formulaire proprietaire pour creer un bien, saisir ses metadonnees et preparer les uploads.
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,6 +21,9 @@ import { apiFetch, apiUpload } from '../services/apiClient';
 import { biensService } from '../services/biensService';
 import { ErrorToast } from '../components/ErrorToast';
 import type { CommuneOption } from '../types/models';
+
+// Écran propriétaire: formulaire de création d'un bien avec validation locale,
+// chargement des types, autocomplétion des communes et ajout d'une photo.
 
 interface TypeBien {
   id_typebien: number;
@@ -58,6 +63,7 @@ export default function AddBienScreen({ navigation }: any) {
   const communeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Charge la liste des types au montage pour afficher les choix de bien.
     apiFetch<TypeBien[]>('/biens/types')
       .then((rows) => {
         setTypes(rows);
@@ -68,6 +74,7 @@ export default function AddBienScreen({ navigation }: any) {
   }, []);
 
   useEffect(() => {
+    // Autocomplete commune: petit délai pour éviter d'interroger l'API à chaque frappe.
     const q = communeQuery.trim();
     if (selectedCommune && q === `${selectedCommune.ville_nom} (${selectedCommune.ville_code_postal})`) {
       return;
@@ -95,6 +102,7 @@ export default function AddBienScreen({ navigation }: any) {
   }, [communeQuery, selectedCommune]);
 
   async function handleSubmit() {
+    // Toutes les validations métier minimales sont vérifiées avant l'appel API.
     if (!isOwner) {
       setError('Seuls les propriétaires peuvent publier des biens.');
       return;
@@ -161,6 +169,7 @@ export default function AddBienScreen({ navigation }: any) {
   }
 
   function pickFileWeb() {
+    // Version web: on récupère un fichier local et on l'envoie ensuite au backend.
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/jpeg,image/png,image/webp';
@@ -174,6 +183,7 @@ export default function AddBienScreen({ navigation }: any) {
   }
 
   async function pickFromLibrary() {
+    // Mobile: ouverture de la galerie après demande de permission.
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setError('Autorisez l\'accès aux photos pour choisir une image');
@@ -192,6 +202,7 @@ export default function AddBienScreen({ navigation }: any) {
   }
 
   async function takePhoto() {
+    // Mobile: prise de photo directe avec permission caméra.
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setError('Autorisez la caméra pour prendre une photo');

@@ -1,6 +1,7 @@
 <?php
 // goodnight/api/config/database.php
 // Connexion PDO à la base de données MySQL "goodnight"
+// Rôle: fournir une seule connexion PDO réutilisable à tous les contrôleurs.
 
 class Database {
     private static ?PDO $instance = null;

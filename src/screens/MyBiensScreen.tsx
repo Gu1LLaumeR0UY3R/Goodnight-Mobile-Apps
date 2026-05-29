@@ -43,6 +43,8 @@ import { getImageUrl } from '../services/apiClient';
 import { StatusBadge } from '../components/StatusBadge';
 import type { Bien } from '../types/models';
 
+// Vue propriétaire des annonces: statut, édition, photos et blocages.
+
 export default function MyBiensScreen({ navigation }: any) {
   const { user } = useAuth();
   const canPublish = user?.type_compte === 'proprietaire';

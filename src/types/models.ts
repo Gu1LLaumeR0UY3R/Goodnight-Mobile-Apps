@@ -29,7 +29,7 @@ export interface Locataire {
   complement_locataire: string | null;
   RaisonSociale: string | null;
   Siret: string | null;
-  type_compte: 'locataire' | 'proprietaire';
+  type_compte: 'locataire' | 'proprietaire' | 'admin';
   is_entreprise: boolean;
   id_commune: number | null;
   pfp_loca: string | null;
@@ -158,3 +158,9 @@ export interface CadreProfil {
   description: string | null;
   chemin_fichier: string | null;
 }
+
+// Alias métier explicites pour homogénéiser le vocabulaire dans l'app.
+export type User = Locataire;
+export type BienEntity = Bien;
+export type ReservationEntity = Reservation;
+

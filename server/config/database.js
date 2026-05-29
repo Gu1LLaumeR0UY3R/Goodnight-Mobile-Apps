@@ -1,5 +1,6 @@
 // server/config/database.js
 // Connexion MySQL2 avec pool de connexions (équivalent PDO en PHP)
+// Rôle: couche d'accès aux données partagée par tous les contrôleurs.
 
 const mysql = require('mysql2/promise');
 require('dotenv').config();

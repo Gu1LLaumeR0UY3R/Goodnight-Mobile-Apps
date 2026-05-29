@@ -1,6 +1,7 @@
 // src/screens/MapScreen.web.tsx
 // Stub web : react-native-maps n'est pas supporté sur web.
 // Cette version s'affiche à la place sur platform=web.
+// Role: vue de substitution sur web quand la carte native n'est pas disponible.
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

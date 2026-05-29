@@ -1,5 +1,6 @@
 // src/screens/RegisterScreen.tsx
 // Écran d'inscription — création de compte locataire
+// Role: creation d'un compte utilisateur avec validation minimale des champs d'inscription.
 
 import { useState } from 'react';
 import {
@@ -17,6 +18,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { getErrorMessage } from '../utils/errorHandler';
 import { ErrorToast } from '../components/ErrorToast';
+
+// Formulaire d'inscription: crée le compte puis lance l'auto-connexion via le contexte auth.
 
 interface Props {
   onRegisterSuccess: () => void;

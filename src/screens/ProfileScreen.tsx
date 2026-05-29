@@ -1,9 +1,12 @@
 // src/screens/ProfileScreen.tsx
+// Role: hub du compte utilisateur avec navigation vers les actions liees au profil et au role.
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
+
+// Écran profil: centralise les accès aux parcours selon le rôle connecté.
 
 export default function ProfileScreen({ navigation }: any) {
   const { user, isAuthenticated, logout } = useAuth();

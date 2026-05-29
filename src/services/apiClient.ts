@@ -28,6 +28,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import { NativeModules, Platform } from 'react-native';
+import type { ApiResponse, HttpMethod } from '../types/api';
 
 function resolveServerHost(): string {
   // Option manuelle prioritaire — ex: EXPO_PUBLIC_SERVER_HOST=http://192.168.1.30
@@ -59,7 +60,19 @@ const BASE_URL = SERVER_HOST;
 /** Résout un chemin de photo relatif ou absolu en URL complète. */
 export function getImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
+  if (path.startsWith('http')) {
+    try {
+      const parsed = new URL(path);
+      // Une URL d'image enregistrée avec localhost depuis un poste web
+      // n'est pas joignable depuis un téléphone. On la remappe vers SERVER_HOST.
+      if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+        return `${SERVER_HOST}${parsed.pathname}`;
+      }
+      return path;
+    } catch {
+      return path;
+    }
+  }
   // Sur web, les anciennes photos locales (/uploads/...) renvoient souvent 404,
   // ce qui déclenche des erreurs ORB dans la console.
   if (Platform.OS === 'web' && path.startsWith('/uploads/')) return null;
@@ -81,15 +94,7 @@ export async function saveToken(token: string): Promise<void> {
   await SecureStore.setItemAsync('jwt_token', token);
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-export async function apiFetch<T>(
+export async function fetchApi<T>(
   endpoint: string,
   method: HttpMethod = 'GET',
   body?: object
@@ -220,9 +225,13 @@ export async function refreshJwtIfNeeded(): Promise<void> {
   if (remaining > 86400) return; // Plus d'un jour restant → pas besoin de rafraîchir
 
   try {
-    const result = await apiFetch<{ token: string }>('/auth/refresh', 'POST');
+    const result = await fetchApi<{ token: string }>('/auth/refresh', 'POST');
     await saveToken(result.token);
   } catch {
     // Échec silencieux : le token existant reste valide jusqu'à son expiration naturelle
   }
 }
+
+// Alias de compatibilité pour migration progressive du code existant.
+export const apiFetch = fetchApi;
+

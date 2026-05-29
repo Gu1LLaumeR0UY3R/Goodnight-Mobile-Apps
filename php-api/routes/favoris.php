@@ -3,6 +3,11 @@
 // GET    /favoris        — liste des favoris (authentifié)
 // POST   /favoris        — ajouter un favori (authentifié)
 // DELETE /favoris/:id    — supprimer un favori (authentifié)
+// Rôle: contrôleur métier des favoris du locataire connecté.
+/** @var string      $method */
+/** @var string|null $param1 */
+/** @var string|null $param2 */
+/** @var string|null $param3 */
 
 $payload = requireAuth();
 $userId  = (int) $payload['id_locataire'];

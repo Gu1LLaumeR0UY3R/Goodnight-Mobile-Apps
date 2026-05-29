@@ -1,4 +1,5 @@
 // src/screens/NotificationsScreen.tsx
+// Role: centre de notifications du compte connecte avec suivi des lectures.
 import React, { useCallback, useState } from 'react';
 import {
   View,
@@ -14,6 +15,8 @@ import { notificationsService } from '../services/notificationsService';
 import { useNotifications } from '../hooks/useNotifications';
 import { getErrorMessage } from '../utils/errorHandler';
 import type { Notification } from '../types/models';
+
+// Centre de notifications: liste des messages, marquage comme lu et synchronisation du badge.
 
 export default function NotificationsScreen() {
   const { refreshUnreadCount } = useNotifications();

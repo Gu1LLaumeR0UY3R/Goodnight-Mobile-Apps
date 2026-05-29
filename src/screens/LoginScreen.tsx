@@ -1,4 +1,5 @@
 // src/screens/LoginScreen.tsx
+// Role: point d'entree d'authentification pour ouvrir une session locataire, proprietaire ou admin.
 
 import { useState } from 'react';
 import {
@@ -16,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { getErrorMessage } from '../utils/errorHandler';
 import { ErrorToast } from '../components/ErrorToast';
+
+// Formulaire de connexion: validation locale puis appel du contexte d'authentification.
 
 interface Props {
   onLoginSuccess: () => void;

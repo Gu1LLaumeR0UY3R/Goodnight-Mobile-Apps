@@ -29,7 +29,7 @@
 // Issue #1 — Navigation principale avec onglets
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,46 +55,74 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
+import { RequireAuth, RequireRole } from './ProtectedRoute';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const RootStack = createStackNavigator();
 
-function AuthRequired({ navigation, title }: { navigation: any; title: string }) {
+function FavoritesGate(props: any) {
   return (
-    <View style={stylesAuth.container}>
-      <Ionicons name="lock-closed-outline" size={44} color="#6b7280" />
-      <Text style={stylesAuth.title}>{title}</Text>
-      <Text style={stylesAuth.subtitle}>Connectez-vous pour accéder à cette section.</Text>
-      <TouchableOpacity style={stylesAuth.button} onPress={() => navigation.navigate('Login')}>
-        <Text style={stylesAuth.buttonText}>Se connecter</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={stylesAuth.secondaryButton}
-        onPress={() => navigation.navigate('Register')}
-      >
-        <Text style={stylesAuth.secondaryButtonText}>Créer un compte</Text>
-      </TouchableOpacity>
-    </View>
+    <RequireAuth navigation={props.navigation} title="Favoris">
+      <FavoritesScreen {...props} />
+    </RequireAuth>
   );
 }
 
-function FavoritesGate(props: any) {
-  const { isAuthenticated } = useAuth();
-  const { navigation } = props;
-  if (!isAuthenticated) {
-    return <AuthRequired navigation={navigation} title="Favoris" />;
-  }
-  return <FavoritesScreen {...props} />;
+function TripsGate(props: any) {
+  return (
+    <RequireAuth navigation={props.navigation} title="Voyages">
+      <ReservationsScreen {...props} />
+    </RequireAuth>
+  );
 }
 
-function TripsGate(props: any) {
-  const { isAuthenticated } = useAuth();
-  const { navigation } = props;
-  if (!isAuthenticated) {
-    return <AuthRequired navigation={navigation} title="Voyages" />;
-  }
-  return <ReservationsScreen {...props} />;
+function MyBiensGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Mes biens" roles={['proprietaire', 'admin']}>
+      <MyBiensScreen {...props} />
+    </RequireRole>
+  );
+}
+
+function AddBienGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Ajouter un bien" roles={['proprietaire', 'admin']}>
+      <AddBienScreen {...props} />
+    </RequireRole>
+  );
+}
+
+function EditBienGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Modifier le bien" roles={['proprietaire', 'admin']}>
+      <EditBienScreen {...props} />
+    </RequireRole>
+  );
+}
+
+function GalerieBienGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Photos" roles={['proprietaire', 'admin']}>
+      <GalerieBienScreen {...props} />
+    </RequireRole>
+  );
+}
+
+function BlocagesGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Blocages" roles={['proprietaire', 'admin']}>
+      <BienBlocagesScreen {...props} />
+    </RequireRole>
+  );
+}
+
+function OwnerReservationsGate(props: any) {
+  return (
+    <RequireRole navigation={props.navigation} title="Réservations reçues" roles={['proprietaire', 'admin']}>
+      <OwnerReservationsScreen {...props} />
+    </RequireRole>
+  );
 }
 
 function HomeStack() {
@@ -112,15 +140,15 @@ function ProfileStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ title: 'Profil' }} />
-      <Stack.Screen name="MyBiens" component={MyBiensScreen} options={{ title: 'Mes biens' }} />
-      <Stack.Screen name="AddBien" component={AddBienScreen} options={{ title: 'Ajouter un bien' }} />
-      <Stack.Screen name="EditBien" component={EditBienScreen} options={{ title: 'Modifier le bien' }} />
-      <Stack.Screen name="GalerieBien" component={GalerieBienScreen} options={{ title: 'Photos' }} />
-      <Stack.Screen name="BienBlocages" component={BienBlocagesScreen} options={{ title: 'Blocages' }} />
+      <Stack.Screen name="MyBiens" component={MyBiensGate} options={{ title: 'Mes biens' }} />
+      <Stack.Screen name="AddBien" component={AddBienGate} options={{ title: 'Ajouter un bien' }} />
+      <Stack.Screen name="EditBien" component={EditBienGate} options={{ title: 'Modifier le bien' }} />
+      <Stack.Screen name="GalerieBien" component={GalerieBienGate} options={{ title: 'Photos' }} />
+      <Stack.Screen name="BienBlocages" component={BlocagesGate} options={{ title: 'Blocages' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="Map" component={MapScreen} options={{ title: 'Carte' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Modifier mon profil' }} />
-      <Stack.Screen name="OwnerReservations" component={OwnerReservationsScreen} options={{ title: 'Réservations reçues' }} />
+      <Stack.Screen name="OwnerReservations" component={OwnerReservationsGate} options={{ title: 'Réservations reçues' }} />
     </Stack.Navigator>
   );
 }
@@ -216,51 +244,3 @@ export default function AppNavigator() {
     </RootStack.Navigator>
   );
 }
-
-const stylesAuth = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#f9fafb',
-  },
-  title: {
-    marginTop: 12,
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  subtitle: {
-    marginTop: 8,
-    textAlign: 'center',
-    color: '#6b7280',
-    fontSize: 15,
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  secondaryButton: {
-    marginTop: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#ffffff',
-  },
-  secondaryButtonText: {
-    color: '#334155',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});

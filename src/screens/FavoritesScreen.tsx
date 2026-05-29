@@ -1,4 +1,5 @@
 // src/screens/FavoritesScreen.tsx
+// Role: liste des biens favoris du locataire avec acces rapide au detail.
 import React, { useCallback, useState } from 'react';
 import {
   View,
@@ -16,6 +17,8 @@ import { favorisService } from '../services/favorisService';
 import { getImageUrl } from '../services/apiClient';
 import { getErrorMessage } from '../utils/errorHandler';
 import type { Bien } from '../types/models';
+
+// Liste des biens favoris: chargement au focus, retrait rapide et accès au détail.
 
 export default function FavoritesScreen({ navigation }: any) {
   const [favoris, setFavoris] = useState<Bien[]>([]);

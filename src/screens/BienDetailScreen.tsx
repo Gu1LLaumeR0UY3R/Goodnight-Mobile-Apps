@@ -1,4 +1,5 @@
 // src/screens/BienDetailScreen.tsx
+// Role: vue detaillee d'un bien avec reservation, favoris, commentaires et galerie.
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, FlatList, Image, TouchableOpacity,
@@ -15,6 +16,9 @@ import { useAuth } from '../hooks/useAuth';
 import type { Bien, Commentaire } from '../types/models';
 import type { DisponibilitePlage } from '../types/reservation';
 
+// Écran cœur du parcours utilisateur: détail du bien, réservation,
+// commentaires, favoris et affichage des disponibilités.
+
 const { width: SCREEN_W } = Dimensions.get('window');
 
 // Le détail renvoie aussi photos[] et prix_semaine_min
@@ -27,6 +31,7 @@ type MarkedDates = Record<string, any>;
 
 // ─── Sous-composants ─────────────────────────────────────────────────────────
 function StatItem({ icon, label }: { icon: any; label: string }) {
+  // Petit bloc de lecture rapide pour résumer un attribut du logement.
   return (
     <View style={styles.statItem}>
       <Ionicons name={icon} size={20} color="#6b7280" />
@@ -36,6 +41,7 @@ function StatItem({ icon, label }: { icon: any; label: string }) {
 }
 
 function StarRow({ note }: { note: number }) {
+  // Rend la note moyenne sous forme d'étoiles lisibles.
   return (
     <View style={styles.starRow}>
       {[1, 2, 3, 4, 5].map(i => (
@@ -77,12 +83,14 @@ export default function BienDetailScreen({ route, navigation }: any) {
   const [userComment,        setUserComment]        = useState<Commentaire | null>(null);
 
   function resetReservationSelection(nextBlockedRanges: DisponibilitePlage[] = blockedRanges) {
+    // Réinitialise la sélection de dates quand l'utilisateur recommence.
     setDateDebut(null);
     setDateFin(null);
     setCalendarMarks(buildBlockedMarks(nextBlockedRanges));
   }
 
   function buildBlockedMarks(ranges: DisponibilitePlage[]): MarkedDates {
+    // Convertit les indisponibilités API en marquages de calendrier.
     const marks: MarkedDates = {};
     ranges.forEach((r) => {
       const d = new Date(r.date_debut);

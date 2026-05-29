@@ -1,6 +1,7 @@
 <?php
 // goodnight/api/core/helpers.php
 // Fonctions utilitaires : réponses JSON + headers CORS
+// Rôle: petite boîte à outils commune utilisée par tous les contrôleurs.
 
 function sendCorsHeaders(): void {
     header('Access-Control-Allow-Origin: *');

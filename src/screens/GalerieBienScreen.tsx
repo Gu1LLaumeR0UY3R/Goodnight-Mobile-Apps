@@ -49,6 +49,8 @@ import { apiUpload, getImageUrl } from '../services/apiClient';
 import { ErrorToast } from '../components/ErrorToast';
 import type { Photo } from '../types/models';
 
+// Galerie photo propriétaire: ajout URL/local, suppression et photo principale.
+
 export default function GalerieBienScreen({ route }: any) {
   const { bienId, bienTitle } = route.params as { bienId: number; bienTitle: string };
 

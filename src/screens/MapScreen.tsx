@@ -48,6 +48,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useScreenFocus } from '../hooks/useScreenFocus';
 import type { Bien } from '../types/models';
 
+// Carte mobile: marqueurs, géolocalisation, mini-fiches et détection de nouveaux biens.
+
 const FRANCE_CENTER: Region = {
   latitude: 46.6,
   longitude: 2.35,

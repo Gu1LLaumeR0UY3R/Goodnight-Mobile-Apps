@@ -1,6 +1,9 @@
 <?php
 // php-api/routes/auth.php
 // Variables disponibles depuis index.php : $method, $param1
+// Ce fichier contient la logique métier d'authentification: login, register,
+// profil courant, mise à jour du profil et refresh du JWT.
+// Rôle: contrôleur métier de l'authentification.
 /** @var string      $method */
 /** @var string|null $param1 */
 $method ??= $_SERVER['REQUEST_METHOD'];

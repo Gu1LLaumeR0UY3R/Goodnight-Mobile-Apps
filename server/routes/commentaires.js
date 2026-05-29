@@ -1,5 +1,6 @@
 // server/routes/commentaires.js
 // Routes pour la gestion des commentaires et avis
+// Rôle: contrôleur des avis publics associés aux biens.
 
 const express = require('express');
 const pool = require('../config/database');

@@ -1,6 +1,7 @@
 <?php
 // goodnight/api/core/auth_middleware.php
 // Vérifie le token JWT dans le header Authorization
+// Rôle: bloquer l'accès aux routes protégées si le Bearer token est absent ou invalide.
 
 require_once __DIR__ . '/jwt.php';
 require_once __DIR__ . '/helpers.php';

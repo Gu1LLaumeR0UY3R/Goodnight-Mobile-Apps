@@ -1,5 +1,6 @@
 // src/utils/errorHandler.ts
 // Issue #15 — Gestion centralisée des erreurs avec messages en français
+// Role: normalisation des erreurs techniques vers des messages exploitables par l'UI.
 
 export function getErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Une erreur inattendue est survenue';

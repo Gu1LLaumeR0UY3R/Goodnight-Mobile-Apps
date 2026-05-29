@@ -1,5 +1,6 @@
 // src/types/reservation.ts
 // Issue #16 — Types pour la réservation
+// Role: structures metier de reservation partagees entre ecrans et services.
 
 export interface DisponibilitePlage {
   date_debut: string;   // YYYY-MM-DD

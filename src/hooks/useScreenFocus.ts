@@ -24,6 +24,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 
+// Hook utilitaire pour relancer une action quand l'écran reprend le focus.
+
 export function useScreenFocus(callback: (() => void | Promise<void>) | null) {
   // Stocke toujours la version la plus récente du callback
   // sans provoquer de re-render (les refs sont mutées silencieusement)

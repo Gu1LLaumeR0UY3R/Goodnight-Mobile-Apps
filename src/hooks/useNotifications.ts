@@ -18,6 +18,8 @@ import { useAuth } from './useAuth';
 import { notificationsService } from '../services/notificationsService';
 import type { Notification as AppNotification } from '../types/models';
 
+// Hook de notifications: récupère le badge, gère le polling et déclenche une alerte locale si besoin.
+
 interface NotificationsContextType {
   unreadCount: number;
   refreshUnreadCount: () => Promise<void>;
@@ -32,6 +34,7 @@ export function useNotifications(): NotificationsContextType {
 }
 
 async function maybeNotifyOnDevice(item: AppNotification): Promise<void> {
+  // Notification locale uniquement sur appareil natif, pas dans Expo Go ni sur le web.
   if (Platform.OS === 'web' || IS_EXPO_GO) return;
 
   try {
@@ -49,6 +52,7 @@ async function maybeNotifyOnDevice(item: AppNotification): Promise<void> {
 }
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
+  // Le provider conserve le compteur non lu et le synchronise avec l'API.
   const { isAuthenticated } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const initialLoadDoneRef = useRef(false);

@@ -1,6 +1,7 @@
 <?php
 // goodnight/api/core/jwt.php
 // Implémentation JWT HS256 sans dépendance externe
+// Rôle: générer et vérifier les jetons d'authentification côté serveur.
 
 class JWT {
     // ⚠️ Changez cette clé secrète par une valeur aléatoire longue en production

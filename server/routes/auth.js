@@ -1,5 +1,6 @@
 // server/routes/auth.js
 // Routes d'authentification : login, register, me
+// Rôle: contrôleur d'authentification du backend Node.
 
 const express  = require('express');
 const bcrypt   = require('bcryptjs');

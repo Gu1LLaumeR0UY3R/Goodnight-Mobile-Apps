@@ -1,5 +1,6 @@
 // server/routes/reservations.js
 // Routes pour la gestion des réservations
+// Rôle: contrôleur des réservations et des changements de statut.
 
 const express = require('express');
 const pool = require('../config/database');

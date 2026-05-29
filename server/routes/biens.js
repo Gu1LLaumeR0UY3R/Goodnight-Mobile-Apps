@@ -1,5 +1,6 @@
 // server/routes/biens.js
 // Routes pour la gestion des biens immobiliers
+// Rôle: contrôleur métier des biens et des filtres de recherche.
 
 const express = require('express');
 const pool = require('../config/database');

@@ -1,5 +1,7 @@
 // src/hooks/useAuth.tsx
 // Issue #13 — Hook & contexte d'authentification global (React Native / Expo)
+// Ce fichier joue le rôle de contrôleur d'état d'auth côté front: session,
+// rôle courant, connexion, inscription, déconnexion et restauration au démarrage.
 
 import {
   createContext,
@@ -10,12 +12,11 @@ import {
 } from 'react';
 import type { Locataire } from '../types/models';
 import { authService, getCachedUser, saveUserCache } from '../services/authService';
-import { apiFetch, refreshJwtIfNeeded } from '../services/apiClient';
+import { fetchApi, refreshJwtIfNeeded } from '../services/apiClient';
+import type { AppRole, AuthenticatedRole, RegisterAccountType } from '../types/auth';
 
-interface AuthContextType {
-  user: Locataire | null;
+type AuthContextActions = {
   isLoading: boolean;
-  isAuthenticated: boolean;
   updateUser: (u: Locataire) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (
@@ -25,12 +26,26 @@ interface AuthContextType {
     tel_locataire: string | null,
     password: string,
     dateNaissance_locataire: string | null,
-    type_compte: 'locataire' | 'proprietaire',
+    type_compte: RegisterAccountType,
     is_entreprise: boolean,
     siret: string | null
   ) => Promise<void>;
   logout: () => Promise<void>;
-}
+  hasRole: (roles: AppRole | AppRole[]) => boolean;
+};
+
+type AuthContextType = AuthContextActions & (
+  | {
+      user: null;
+      role: 'visiteur';
+      isAuthenticated: false;
+    }
+  | {
+      user: Locataire;
+      role: AuthenticatedRole;
+      isAuthenticated: true;
+    }
+);
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -44,18 +59,31 @@ function useAuthProvider(): AuthContextType {
   const [user, setUser] = useState<Locataire | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  function resolveRole(u: Locataire | null): AppRole {
+    if (!u) return 'visiteur';
+    if (u.type_compte === 'admin') return 'admin';
+    if (u.type_compte === 'proprietaire') return 'proprietaire';
+    return 'locataire';
+  }
+
+  function hasRole(roles: AppRole | AppRole[]): boolean {
+    const currentRole = resolveRole(user);
+    const accepted = Array.isArray(roles) ? roles : [roles];
+    return accepted.includes(currentRole);
+  }
+
   // Vérification du token JWT stocké au démarrage
   useEffect(() => {
     (async () => {
       const token = await authService.getStoredToken();
       if (token) {
         try {
-          const me = await apiFetch<Locataire>('/auth/me');
+          const me = await fetchApi<Locataire>('/auth/me');
           setUser(me);
           await saveUserCache(me); // Rafraîchit le cache local
           refreshJwtIfNeeded().catch(() => {}); // Renouvellement silencieux si token proche de l'expiration
-        } catch (err: any) {
-          const msg: string = err?.message ?? '';
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : '';
           if (
             msg.includes('Session expirée') ||
             msg.includes('401') ||
@@ -87,7 +115,7 @@ function useAuthProvider(): AuthContextType {
     tel_locataire: string | null,
     password: string,
     dateNaissance_locataire: string | null,
-    type_compte: 'locataire' | 'proprietaire',
+    type_compte: RegisterAccountType,
     is_entreprise: boolean,
     siret: string | null
   ) {
@@ -114,14 +142,30 @@ function useAuthProvider(): AuthContextType {
     setUser(u);
   }
 
-  return {
-    user,
+  const base: AuthContextActions = {
     isLoading,
-    isAuthenticated: !!user,
     updateUser,
     login,
     register,
     logout,
+    hasRole,
+  };
+
+  const role = resolveRole(user);
+  if (!user) {
+    return {
+      ...base,
+      user: null,
+      role: 'visiteur',
+      isAuthenticated: false,
+    };
+  }
+
+  return {
+    ...base,
+    user,
+    role,
+    isAuthenticated: true,
   };
 }
 

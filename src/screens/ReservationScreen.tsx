@@ -1,5 +1,6 @@
 // src/screens/ReservationScreen.tsx
 // Issue #16 — Écran de réservation : sélection des dates + récapitulatif tarifaire
+// Role: parcours de reservation avec choix des dates, calculs tarifaires et validation finale.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -15,6 +16,8 @@ import { getErrorMessage } from '../utils/errorHandler';
 import { ErrorToast } from '../components/ErrorToast';
 import type { Bien } from '../types/models';
 import type { TarifCalcule, DisponibilitePlage } from '../types/reservation';
+
+// Écran de réservation: calendrier, prix, indisponibilités et confirmation de séjour.
 
 interface BienDetail extends Bien {
   photos?: string[];

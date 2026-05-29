@@ -73,6 +73,8 @@ const SORT_LABELS: Record<SearchFilters['sort'], string> = {
   rating_desc: 'Meilleure note',
 };
 
+// Écran de recherche avancée: il orchestre la saisie, les filtres et l'affichage des résultats.
+
 export default function SearchScreen({ navigation }: any) {
   const { user } = useAuth();
   const [query, setQuery] = useState('');

@@ -11,6 +11,7 @@
 // GET /biens/:id/blocages    — lister les blocages propriétaire
 // POST /biens/:id/blocages   — créer un blocage propriétaire
 // DELETE /biens/:id/blocages/:blocageId — supprimer un blocage propriétaire
+// Rôle: contrôleur métier principal des annonces, photos, blocages et filtres.
 
 // Variables injectées par index.php via require (déclarées ici pour l'analyseur statique)
 /** @var string      $method */

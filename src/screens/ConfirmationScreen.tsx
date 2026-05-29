@@ -1,9 +1,12 @@
 // src/screens/ConfirmationScreen.tsx
 // Issue #16 — Écran de confirmation après réservation réussie
+// Role: ecran de fin de parcours qui confirme la reservation et propose la suite de navigation.
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+// Écran de confirmation de réservation: récapitulatif final et retour vers l'application.
 
 export default function ConfirmationScreen({ route, navigation }: any) {
   const { reservation } = route.params ?? {};

@@ -31,8 +31,11 @@
  *   setPhotoAsFirst(id, photoId) → PUT /biens/:id/photos/:photoId (photo principale)
  *   uploadPhoto(fileUri)         → POST /biens/upload-photo   Upload multipart
  */
-import { apiFetch, apiUpload } from './apiClient';
+import { fetchApi, apiUpload } from './apiClient';
 import type { Bien, Blocage, CommuneOption, Photo } from '../types/models';
+
+// Service principal des biens: liste, détail, création, édition, photos et blocages.
+// L'objectif est d'éviter que les écrans manipulent directement les URL API.
 
 export interface UpdateBienPayload {
   designation_bien: string;
@@ -81,6 +84,7 @@ export interface BienFilters {
 
 export const biensService = {
   async uploadPhoto(fileUri: string): Promise<{ path: string; message: string }> {
+    // Upload multipart d'une image locale, puis retour du chemin stocké côté serveur.
     const filename = fileUri.split('/').pop() || `photo_${Date.now()}.jpg`;
     const ext = filename.toLowerCase().split('.').pop();
     const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
@@ -96,58 +100,60 @@ export const biensService = {
   },
 
   async create(data: CreateBienPayload): Promise<{ id_biens: number; message: string }> {
-    return apiFetch<{ id_biens: number; message: string }>('/biens', 'POST', data);
+    // Création d'un bien propriétaire avec validation côté API.
+    return fetchApi<{ id_biens: number; message: string }>('/biens', 'POST', data);
   },
 
   async getMine(): Promise<Bien[]> {
-    return apiFetch<Bien[]>('/biens/mine');
+    return fetchApi<Bien[]>('/biens/mine');
   },
 
   async searchCommunes(query: string): Promise<CommuneOption[]> {
-    return apiFetch<CommuneOption[]>(`/biens/communes?q=${encodeURIComponent(query)}`);
+    return fetchApi<CommuneOption[]>(`/biens/communes?q=${encodeURIComponent(query)}`);
   },
 
   async getBlocages(id: number): Promise<Blocage[]> {
-    return apiFetch<Blocage[]>(`/biens/${id}/blocages`);
+    return fetchApi<Blocage[]>(`/biens/${id}/blocages`);
   },
 
   async createBlocage(id: number, data: CreateBlocagePayload): Promise<{ id_blocage: number; message: string }> {
-    return apiFetch<{ id_blocage: number; message: string }>(`/biens/${id}/blocages`, 'POST', data);
+    return fetchApi<{ id_blocage: number; message: string }>(`/biens/${id}/blocages`, 'POST', data);
   },
 
   async deleteBlocage(id: number, blocageId: number): Promise<{ message: string }> {
-    return apiFetch<{ message: string }>(`/biens/${id}/blocages/${blocageId}`, 'DELETE');
+    return fetchApi<{ message: string }>(`/biens/${id}/blocages/${blocageId}`, 'DELETE');
   },
 
   async update(id: number, data: UpdateBienPayload): Promise<{ message: string }> {
-    return apiFetch<{ message: string }>(`/biens/${id}`, 'PUT', data);
+    return fetchApi<{ message: string }>(`/biens/${id}`, 'PUT', data);
   },
 
   async getPhotos(id: number): Promise<Photo[]> {
-    return apiFetch<Photo[]>(`/biens/${id}/photos`);
+    return fetchApi<Photo[]>(`/biens/${id}/photos`);
   },
 
   async addPhoto(id: number, lienPhoto: string): Promise<{ id_photo: number; message: string }> {
-    return apiFetch<{ id_photo: number; message: string }>(`/biens/${id}/photos`, 'POST', { lien_photo: lienPhoto });
+    return fetchApi<{ id_photo: number; message: string }>(`/biens/${id}/photos`, 'POST', { lien_photo: lienPhoto });
   },
 
   async deletePhoto(id: number, photoId: number): Promise<{ message: string }> {
-    return apiFetch<{ message: string }>(`/biens/${id}/photos/${photoId}`, 'DELETE');
+    return fetchApi<{ message: string }>(`/biens/${id}/photos/${photoId}`, 'DELETE');
   },
 
   async setPhotoAsFirst(id: number, photoId: number): Promise<{ message: string }> {
-    return apiFetch<{ message: string }>(`/biens/${id}/photos/${photoId}`, 'PUT');
+    return fetchApi<{ message: string }>(`/biens/${id}/photos/${photoId}`, 'PUT');
   },
 
   async delete(id: number): Promise<{ message: string }> {
-    return apiFetch<{ message: string }>(`/biens/${id}`, 'DELETE');
+    return fetchApi<{ message: string }>(`/biens/${id}`, 'DELETE');
   },
 
   async getReservations(id: number): Promise<import('../types/models').Reservation[]> {
-    return apiFetch<import('../types/models').Reservation[]>(`/biens/${id}/reservations`);
+    return fetchApi<import('../types/models').Reservation[]>(`/biens/${id}/reservations`);
   },
 
   async getAll(filters: BienFilters = {}): Promise<Bien[]> {
+    // Construction des paramètres de recherche pour l'écran Explorer et Search.
     const params = new URLSearchParams();
     if (filters.search)       params.set('search', filters.search);
     if (filters.ville)        params.set('ville', filters.ville);
@@ -166,7 +172,7 @@ export const biensService = {
     if (filters.sort)        params.set('sort', filters.sort);
     if (filters.page != null) params.set('page', String(filters.page));
     if (filters.limit != null) params.set('limit', String(filters.limit));
-    return apiFetch<Bien[]>(`/biens?${params.toString()}`);
+    return fetchApi<Bien[]>(`/biens?${params.toString()}`);
   },
 
   async getCount(filters: BienFilters = {}): Promise<number> {
@@ -186,11 +192,11 @@ export const biensService = {
     if (filters.lng != null)          params.set('lng', String(filters.lng));
     if (filters.date_debut)  params.set('date_debut', filters.date_debut);
     if (filters.date_fin)    params.set('date_fin', filters.date_fin);
-    const data = await apiFetch<{ total: number }>(`/biens/count?${params.toString()}`);
+    const data = await fetchApi<{ total: number }>(`/biens/count?${params.toString()}`);
     return data.total;
   },
 
   async getById(id: number): Promise<Bien> {
-    return apiFetch<Bien>(`/biens/${id}`);
+    return fetchApi<Bien>(`/biens/${id}`);
   },
 };

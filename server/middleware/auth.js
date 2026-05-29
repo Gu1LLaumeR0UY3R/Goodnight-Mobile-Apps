@@ -1,5 +1,6 @@
 // server/middleware/auth.js
 // Vérifie le token JWT dans le header Authorization
+// Rôle: garde d'accès pour les routes protégées.
 
 const jwt = require('jsonwebtoken');
 

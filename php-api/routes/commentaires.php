@@ -2,6 +2,11 @@
 // php-api/routes/commentaires.php
 // GET  /commentaires/:id_biens  — liste des avis publiés d'un bien
 // POST /commentaires            — poster un avis (authentifié)
+// Rôle: contrôleur métier des commentaires et avis publics.
+/** @var string      $method */
+/** @var string|null $param1 */
+/** @var string|null $param2 */
+/** @var string|null $param3 */
 
 try {
     $pdo = Database::getInstance();

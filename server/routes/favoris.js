@@ -1,5 +1,6 @@
 // server/routes/favoris.js
 // Routes pour la gestion des favoris
+// Rôle: contrôleur des favoris du locataire connecté.
 
 const express = require('express');
 const pool = require('../config/database');
